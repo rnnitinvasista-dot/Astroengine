@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Observe — See the shape of the noise</title>
-  <meta name="description" content="Every event from your product — rendered as one picture you can actually read.">
+  <title>Universe — See the shape of the noise</title>
+  <meta name="description" content="Think a number in your mind from 1 to 249 with your question, then enter the universe.">
   
   <!-- Tailwind CSS & Iconify -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -83,6 +83,12 @@
       mask-composite: exclude;
       pointer-events: none;
     }
+
+    /* Modal Animation */
+    .glass-modal-backdrop {
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
   </style>
 </head>
 <body class="bg-black">
@@ -103,40 +109,64 @@
               <path d="M19.79 16.5 A9 9 0 0 1 4.21 16.5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="0.01 4.7"/>
               <circle cx="12" cy="12" r="2.5" fill="currentColor"/>
             </svg>
-            <span class="font-semibold text-lg tracking-tight">Observe</span>
+            <span class="font-semibold text-lg tracking-tight">Universe</span>
             <div class="hidden md:flex gap-8 ml-8">
-              <a href="#product" class="text-white/80 hover:text-white text-sm font-medium transition-colors">Product</a>
-              <a href="#pricing" class="text-white/80 hover:text-white text-sm font-medium transition-colors">Pricing</a>
-              <a href="#contact" class="text-white/80 hover:text-white text-sm font-medium transition-colors">Contact us</a>
+              <a href="#oracle" class="text-white/80 hover:text-white text-sm font-medium transition-colors">Oracle</a>
+              <a href="#horary" class="text-white/80 hover:text-white text-sm font-medium transition-colors">Horary 249</a>
+              <a href="#insights" class="text-white/80 hover:text-white text-sm font-medium transition-colors">Insights</a>
             </div>
           </div>
 
           <!-- Right Group -->
           <div class="flex items-center gap-4">
-            <button class="text-white text-sm font-medium">Sign Up</button>
-            <button class="bg-white rounded-full px-5 py-2 text-black text-sm font-medium whitespace-nowrap">Join Waitlist</button>
+            <button class="text-white text-sm font-medium">Explore</button>
+            <button onclick="document.getElementById('user-name').focus()" class="bg-white rounded-full px-5 py-2 text-black text-sm font-medium whitespace-nowrap hover:scale-105 transition-transform">Enter Universe</button>
           </div>
         </div>
       </nav>
 
       <!-- Hero Content -->
-      <div class="relative z-10 flex-1 flex flex-col items-center justify-center px-6 py-12 text-center -translate-y-[20%]">
+      <div class="relative z-10 flex-1 flex flex-col items-center justify-center px-6 py-12 text-center -translate-y-[15%]">
         <h1 class="text-6xl md:text-7xl lg:text-8xl font-serif-instrument tracking-tight whitespace-nowrap mb-4"
             style="text-shadow: 0 0 72px rgba(0, 0, 0, 0.42), 0 4px 28px rgba(0, 0, 0, 0.28);">
-          See the shape of the <em class="italic">noise</em>
+          See the shape of the <em class="italic">universe</em>
         </h1>
         <p class="text-white/70 text-sm leading-relaxed max-w-2xl md:whitespace-nowrap mb-10"
            style="text-shadow: 0 0 30px rgba(0, 0, 0, 0.32), 0 1px 10px rgba(0, 0, 0, 0.20);">
-          Every event from your product — rendered as one picture you can actually read.
+          Think a number in your mind (1 to 249) with your question, then enter the universe.
         </p>
 
-        <!-- Email Capture -->
-        <div class="max-w-xl w-full">
-          <div class="liquid-glass rounded-full pl-6 pr-1.5 py-1.5 flex items-center gap-3">
-            <input type="email" placeholder="Enter your email"
-                   class="bg-transparent border-none outline-none flex-1 text-white placeholder:text-white/90 text-sm">
-            <button class="bg-white rounded-full px-6 py-3 text-black text-sm font-medium whitespace-nowrap hover:scale-105 transition-transform duration-300">Join Waitlist</button>
-          </div>
+        <!-- Universe Form -->
+        <div class="max-w-2xl w-full">
+          <form id="universe-form" class="liquid-glass rounded-3xl md:rounded-full p-2 md:p-1.5 flex flex-col md:flex-row items-center gap-2 md:gap-3 w-full">
+            <!-- Name Input -->
+            <div class="flex-1 w-full flex items-center pl-4 pr-2 py-1.5">
+              <input type="text" id="user-name" required placeholder="Your Name"
+                     class="bg-transparent border-none outline-none w-full text-white placeholder:text-white/90 text-sm">
+            </div>
+            
+            <div class="hidden md:block w-px h-6 bg-white/20"></div>
+
+            <!-- Question Input -->
+            <div class="flex-[1.4] w-full flex items-center px-4 md:px-2 py-1.5">
+              <input type="text" id="user-question" required placeholder="Your Question..."
+                     class="bg-transparent border-none outline-none w-full text-white placeholder:text-white/90 text-sm">
+            </div>
+
+            <div class="hidden md:block w-px h-6 bg-white/20"></div>
+
+            <!-- Number Input (1 to 249) -->
+            <div class="w-full md:w-32 flex items-center px-4 md:px-2 py-1.5">
+              <input type="number" id="user-number" required min="1" max="249" placeholder="No. (1–249)"
+                     class="bg-transparent border-none outline-none w-full text-white placeholder:text-white/90 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit"
+                    class="bg-white rounded-full px-6 py-3 text-black text-sm font-medium whitespace-nowrap hover:scale-105 transition-transform duration-300 w-full md:w-auto">
+              Enter to Universe
+            </button>
+          </form>
         </div>
       </div>
 
@@ -155,10 +185,120 @@
     </section>
   </div>
 
+  <!-- Universe Oracle Result Modal -->
+  <div id="oracle-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 glass-modal-backdrop hidden opacity-0 transition-opacity duration-300">
+    <div class="liquid-glass rounded-3xl max-w-lg w-full p-8 text-center relative border border-white/20 shadow-2xl">
+      <!-- Top Badge -->
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white/80 text-xs tracking-wider uppercase mb-4">
+        <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+        Cosmic Alignment • KP Horary 1–249
+      </div>
+
+      <h2 id="modal-name-title" class="text-3xl md:text-4xl font-serif-instrument text-white mb-1"></h2>
+      <p id="modal-question-text" class="text-white/60 text-sm italic mb-6"></p>
+
+      <div class="grid grid-cols-3 gap-3 mb-6">
+        <div class="p-3 rounded-2xl bg-white/5 border border-white/10">
+          <div class="text-[11px] text-white/50 uppercase tracking-wide">Seed Number</div>
+          <div id="modal-seed-num" class="text-xl font-bold text-white mt-1"></div>
+        </div>
+        <div class="p-3 rounded-2xl bg-white/5 border border-white/10">
+          <div class="text-[11px] text-white/50 uppercase tracking-wide">Zodiac Sign</div>
+          <div id="modal-sign" class="text-sm font-semibold text-white mt-1"></div>
+        </div>
+        <div class="p-3 rounded-2xl bg-white/5 border border-white/10">
+          <div class="text-[11px] text-white/50 uppercase tracking-wide">Sub-Lord</div>
+          <div id="modal-sublord" class="text-sm font-semibold text-white mt-1"></div>
+        </div>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-white/5 border border-white/10 text-left mb-6">
+        <div class="text-xs font-semibold text-white/80 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+          <iconify-icon icon="lucide:sparkles" class="text-sm"></iconify-icon> Universe Oracle Verdict
+        </div>
+        <p id="modal-verdict" class="text-sm text-white/80 leading-relaxed"></p>
+      </div>
+
+      <div class="flex items-center justify-center gap-3">
+        <button onclick="closeModal()" class="bg-white rounded-full px-6 py-2.5 text-black text-sm font-medium hover:scale-105 transition-transform duration-300">
+          Ask Another Question
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
+    // Video Setup
     const video = document.getElementById('hero-video');
     video.src = "https://designerstephen.github.io/public-assets/videos/observe-hero.mp4";
     video.playbackRate = 0.5;
+
+    // Astrological KP 1-249 Horary Calculation Engine
+    const signs = [
+      { name: "Aries (Mesha)", ruler: "Mars", maxNum: 22 },
+      { name: "Taurus (Vrishabha)", ruler: "Venus", maxNum: 43 },
+      { name: "Gemini (Mithuna)", ruler: "Mercury", maxNum: 64 },
+      { name: "Cancer (Karkata)", ruler: "Moon", maxNum: 85 },
+      { name: "Leo (Simha)", ruler: "Sun", maxNum: 106 },
+      { name: "Virgo (Kanya)", ruler: "Mercury", maxNum: 127 },
+      { name: "Libra (Tula)", ruler: "Venus", maxNum: 148 },
+      { name: "Scorpio (Vrishchika)", ruler: "Mars", maxNum: 169 },
+      { name: "Sagittarius (Dhanu)", ruler: "Jupiter", maxNum: 190 },
+      { name: "Capricorn (Makara)", ruler: "Saturn", maxNum: 211 },
+      { name: "Aquarius (Kumbha)", ruler: "Saturn", maxNum: 232 },
+      { name: "Pisces (Meena)", ruler: "Jupiter", maxNum: 249 }
+    ];
+
+    const subLords = ["Ketu", "Venus", "Sun", "Moon", "Mars", "Rahu", "Jupiter", "Saturn", "Mercury"];
+
+    const oracleMessages = [
+      "The planetary tides indicate favorable momentum. Your thought connects with a positive cusp, signaling success through decisive action.",
+      "The cosmic current advises patience. Underlying factors are aligning behind the scenes; the outcome will reveal itself with clarity soon.",
+      "A transformative alignment is present. Harmony between your intent and the cosmic sub-lord indicates a breakthrough.",
+      "The vibrational pattern suggests dynamic expansion. Trust your intuition and proceed with steady conviction.",
+      "The celestial aspects reflect wisdom and illumination. Your question carries the seeds of a fruitful resolution."
+    ];
+
+    const form = document.getElementById('universe-form');
+    const modal = document.getElementById('oracle-modal');
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('user-name').value.trim();
+      const question = document.getElementById('user-question').value.trim();
+      const num = parseInt(document.getElementById('user-number').value, 10);
+
+      if (!num || num < 1 || num > 249) {
+        alert("Please enter a valid number between 1 and 249.");
+        return;
+      }
+
+      // Calculate Sign and Sublord
+      let matchedSign = signs.find(s => num <= s.maxNum) || signs[signs.length - 1];
+      let subLord = subLords[(num - 1) % subLords.length];
+      let verdict = oracleMessages[(num + question.length) % oracleMessages.length];
+
+      // Populate Modal
+      document.getElementById('modal-name-title').textContent = `${name}'s Reading`;
+      document.getElementById('modal-question-text').textContent = `"${question}"`;
+      document.getElementById('modal-seed-num').textContent = `#${num}`;
+      document.getElementById('modal-sign').textContent = matchedSign.name.split(' ')[0];
+      document.getElementById('modal-sublord').textContent = `${subLord} (Sign: ${matchedSign.ruler})`;
+      document.getElementById('modal-verdict').textContent = verdict;
+
+      // Show Modal
+      modal.classList.remove('hidden');
+      setTimeout(() => {
+        modal.classList.remove('opacity-0');
+      }, 10);
+    });
+
+    function closeModal() {
+      modal.classList.add('opacity-0');
+      setTimeout(() => {
+        modal.classList.add('hidden');
+      }, 300);
+    }
   </script>
 </body>
 </html>
