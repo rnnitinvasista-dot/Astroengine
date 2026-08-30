@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Universe — See the shape of the noise</title>
-  <meta name="description" content="Explore the solar system in real-time 3D orbit with photorealistic textures.">
+  <meta name="description" content="Explore the solar system in real-time 3D orbit with photorealistic textures and ethereal AI astrology consultation.">
   
   <!-- Tailwind CSS, Three.js, & Iconify -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -12,7 +12,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
 
     :root {
       --bg: #000000;
@@ -34,6 +34,7 @@
       touch-action: none;
       user-select: none;
       -webkit-user-select: none;
+      font-family: 'Plus Jakarta Sans', sans-serif;
     }
 
     .font-serif-instrument {
@@ -50,10 +51,10 @@
     }
 
     .liquid-glass {
-      background: rgba(0, 0, 0, 0.35);
+      background: rgba(0, 0, 0, 0.4);
       background-blend-mode: luminosity;
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       border: none;
       box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.15);
       position: relative;
@@ -81,6 +82,33 @@
       pointer-events: none;
     }
 
+    .liquid-card {
+      background: rgba(18, 20, 32, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+    }
+
+    /* Floating Avatar Animation */
+    @keyframes gentleFloat {
+      0%, 100% { transform: translateY(0px) scale(1); }
+      50% { transform: translateY(-8px) scale(1.02); }
+    }
+
+    @keyframes auroraPulse {
+      0%, 100% { box-shadow: 0 0 25px rgba(56, 189, 248, 0.4), 0 0 50px rgba(168, 85, 247, 0.3); }
+      50% { box-shadow: 0 0 40px rgba(56, 189, 248, 0.7), 0 0 80px rgba(168, 85, 247, 0.5); }
+    }
+
+    .avatar-float {
+      animation: gentleFloat 4s ease-in-out infinite;
+    }
+
+    .avatar-speaking {
+      animation: gentleFloat 2.5s ease-in-out infinite, auroraPulse 1.8s ease-in-out infinite;
+    }
+
     /* Transition states */
     .view-hidden {
       opacity: 0;
@@ -103,9 +131,18 @@
     #space-canvas:active {
       cursor: grabbing;
     }
+
+    /* Custom scrollbar */
+    .custom-scroll::-webkit-scrollbar {
+      width: 4px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+    }
   </style>
 </head>
-<body class="bg-black text-white selection:bg-white selection:text-black font-sans">
+<body class="bg-black text-white selection:bg-white selection:text-black">
   <div class="h-[100dvh] max-h-[100dvh] w-full flex flex-col justify-between overflow-hidden relative">
     
     <!-- 1. Background Video (Boy standing looking up at the sky) -->
@@ -135,15 +172,8 @@
           <span id="active-planet-name">Solar System</span>
         </div>
 
-        <!-- Right Group -->
-        <div class="flex items-center gap-2 sm:gap-3">
-          <!-- Zoom to Orbit View Button (Shown when inspecting a planet) -->
-          <button id="orbit-view-btn" onclick="zoomToSolarOrbit()" class="hidden liquid-glass rounded-full px-3 py-1 sm:px-4 sm:py-1.5 text-xs sm:text-sm font-medium text-white/90 hover:text-white items-center gap-1.5 transition hover:bg-white/10">
-            <iconify-icon icon="lucide:orbit" class="text-sm"></iconify-icon>
-            <span>Orbit View</span>
-          </button>
-
-          <!-- Main Action Button -->
+        <!-- Right Group: Main Action Button -->
+        <div class="flex items-center gap-2">
           <button id="main-action-btn" onclick="toggleUniverseMode()" class="bg-white rounded-full px-4 py-1.5 md:px-5 md:py-2 text-black text-xs md:text-sm font-semibold whitespace-nowrap hover:scale-105 active:scale-95 transition-transform shadow-lg">
             Enter Universe
           </button>
@@ -178,19 +208,191 @@
       </div>
     </main>
 
-    <!-- Bottom Action Button: "See your current time" (Visible in Space Mode) -->
-    <div id="space-bottom-bar" class="relative z-30 px-4 pb-4 pt-1 text-center hidden opacity-0 transition-opacity duration-700 flex justify-center">
-      <button id="see-current-time-btn" onclick="handleSeeCurrentTime()"
-              class="liquid-glass rounded-full px-6 py-2.5 text-xs sm:text-sm font-semibold text-white hover:scale-105 active:scale-95 transition-all shadow-2xl flex items-center gap-2.5 group">
+    <!-- Bottom Controls in Space Mode: "See your current time" and "Orbit View" Side-by-Side -->
+    <div id="space-bottom-bar" class="relative z-30 px-4 pb-4 pt-1 hidden opacity-0 transition-opacity duration-700 flex items-center justify-center gap-3">
+      <!-- 1. "See your current time" Button -->
+      <button id="see-current-time-btn" onclick="openEtherealConsultation()"
+              class="liquid-glass rounded-full px-5 py-2.5 sm:px-6 sm:py-2.5 text-xs sm:text-sm font-semibold text-white hover:scale-105 active:scale-95 transition-all shadow-2xl flex items-center gap-2 group">
+        <iconify-icon icon="lucide:sparkles" class="text-sm text-amber-300"></iconify-icon>
         <span>See your current time</span>
-        <div class="w-5 h-5 rounded-full bg-white/15 flex items-center justify-center group-hover:translate-x-0.5 transition-transform">
-          <iconify-icon icon="lucide:arrow-right" class="text-xs text-white"></iconify-icon>
-        </div>
+        <iconify-icon icon="lucide:arrow-right" class="text-xs text-white/80 group-hover:translate-x-0.5 transition-transform"></iconify-icon>
+      </button>
+
+      <!-- 2. "Orbit View" Button placed right next to it -->
+      <button id="orbit-view-btn" onclick="zoomToSolarOrbit()"
+              class="liquid-glass rounded-full px-4 py-2.5 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-semibold text-white/90 hover:text-white hover:scale-105 active:scale-95 transition-all shadow-2xl flex items-center gap-2">
+        <iconify-icon icon="lucide:orbit" class="text-sm text-cyan-400"></iconify-icon>
+        <span>Orbit View</span>
       </button>
     </div>
 
     <!-- Empty Spacer for Hero view -->
     <div id="hero-spacer" class="h-6 shrink-0 relative z-20"></div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- ETHEREAL CHARACTER & VOICE ASTROLOGY CONSULTATION MODAL -->
+  <!-- ========================================================================= -->
+  <div id="ethereal-modal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 opacity-0 transition-opacity duration-500">
+    <div class="liquid-card rounded-3xl w-full max-w-lg overflow-hidden flex flex-col max-h-[92dvh] relative animate-scale-in">
+      
+      <!-- Top Modal Bar -->
+      <div class="px-5 pt-4 pb-2 flex items-center justify-between border-b border-white/10 shrink-0">
+        <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-cyan-300">
+          <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+          <span>Celestial Assistant</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <!-- Voice Mute/Unmute Toggle -->
+          <button id="voice-toggle-btn" onclick="toggleVoiceAudio()" class="p-1.5 rounded-full hover:bg-white/10 text-white/70 hover:text-white transition" title="Toggle Voice Audio">
+            <iconify-icon id="voice-icon" icon="lucide:volume-2" class="text-base"></iconify-icon>
+          </button>
+          <!-- Close Modal Button -->
+          <button onclick="closeEtherealConsultation()" class="p-1.5 rounded-full hover:bg-white/10 text-white/70 hover:text-white transition">
+            <iconify-icon icon="lucide:x" class="text-lg"></iconify-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Body (Scrollable) -->
+      <div class="p-5 sm:p-6 overflow-y-auto custom-scroll flex-1 flex flex-col items-center text-center">
+        
+        <!-- Ethereal Aurora Glowing Character Avatar -->
+        <div class="relative mb-5 shrink-0 flex items-center justify-center">
+          <div id="avatar-glow-ring" class="w-24 h-24 sm:w-28 sm:h-28 rounded-full avatar-float overflow-hidden relative shadow-2xl border border-white/30"
+               style="box-shadow: 0 0 35px rgba(56, 189, 248, 0.45), 0 0 70px rgba(168, 85, 247, 0.35);">
+            <img src="./assets/avatar.jpg" alt="Ethereal Assistant" class="w-full h-full object-cover">
+          </div>
+          <!-- Voice Waves Indicator -->
+          <div id="speech-wave" class="absolute -bottom-2 flex items-center gap-1 bg-black/60 px-3 py-0.5 rounded-full border border-white/20 hidden">
+            <span class="w-1 h-3 bg-cyan-400 rounded-full animate-bounce"></span>
+            <span class="w-1 h-4 bg-violet-400 rounded-full animate-bounce [animation-delay:0.15s]"></span>
+            <span class="w-1 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:0.3s]"></span>
+            <span class="text-[10px] text-cyan-200 ml-1 font-medium">Speaking</span>
+          </div>
+        </div>
+
+        <!-- Assistant Dialogue Text Bubble -->
+        <div id="assistant-speech-box" class="w-full bg-white/5 border border-white/10 rounded-2xl p-3.5 mb-6 text-sm sm:text-base leading-relaxed text-white/90">
+          <p id="assistant-text" class="font-normal transition-all duration-300">
+            Welcome to Universe. What is your name?
+          </p>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- STEP 1: NAME INPUT -->
+        <!-- ============================================== -->
+        <div id="step-name" class="w-full space-y-4">
+          <input type="text" id="user-name-input" placeholder="Enter your name" autofocus
+                 class="w-full liquid-glass rounded-xl px-4 py-3 text-sm sm:text-base text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 border border-white/15">
+          <button onclick="handleNameSubmit()" class="w-full bg-white text-black font-semibold rounded-xl py-3 text-sm hover:scale-[1.02] active:scale-[0.98] transition-transform shadow-lg">
+            Continue
+          </button>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- STEP 2: QUESTION INPUT -->
+        <!-- ============================================== -->
+        <div id="step-question" class="w-full space-y-4 hidden">
+          <textarea id="user-question-input" rows="3" placeholder="What would you like to know about your future, or is there any problem you are facing?"
+                    class="w-full liquid-glass rounded-xl px-4 py-3 text-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 border border-white/15 resize-none"></textarea>
+          <button onclick="handleQuestionSubmit()" class="w-full bg-white text-black font-semibold rounded-xl py-3 text-sm hover:scale-[1.02] active:scale-[0.98] transition-transform shadow-lg">
+            Continue
+          </button>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- STEP 3: BIRTH DETAILS CHOICE (YES / NO) -->
+        <!-- ============================================== -->
+        <div id="step-choice" class="w-full space-y-3 hidden">
+          <button onclick="handleBirthChoice(true)" class="w-full liquid-glass hover:bg-white/15 border border-white/20 rounded-2xl p-4 text-left flex items-center justify-between group transition">
+            <div>
+              <div class="text-sm font-semibold text-white group-hover:text-cyan-300 transition-colors">Yes, I know my exact birth time & details</div>
+              <div class="text-xs text-white/60 mt-0.5">I have my exact birth date, time, and city</div>
+            </div>
+            <iconify-icon icon="lucide:chevron-right" class="text-lg text-white/60 group-hover:translate-x-1 transition-transform"></iconify-icon>
+          </button>
+
+          <button onclick="handleBirthChoice(false)" class="w-full liquid-glass hover:bg-white/15 border border-white/20 rounded-2xl p-4 text-left flex items-center justify-between group transition">
+            <div>
+              <div class="text-sm font-semibold text-white group-hover:text-amber-300 transition-colors">No, I don't know my exact birth time</div>
+              <div class="text-xs text-white/60 mt-0.5">Use 1 to 249 Horary KP System with current time & place</div>
+            </div>
+            <iconify-icon icon="lucide:chevron-right" class="text-lg text-white/60 group-hover:translate-x-1 transition-transform"></iconify-icon>
+          </button>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- STEP 4A: BIRTH DETAILS FORM (ACCURATE DOB, TOB, POB) -->
+        <!-- ============================================== -->
+        <div id="step-birth-form" class="w-full space-y-3 hidden text-left">
+          <div>
+            <label class="text-xs text-white/70 font-medium mb-1 block">Date of Birth</label>
+            <input type="date" id="dob-input" class="w-full liquid-glass rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-400/50 border border-white/15">
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-xs text-white/70 font-medium">Time of Birth</label>
+              <span class="text-[10px] text-amber-300 bg-amber-400/10 px-2 py-0.5 rounded-full border border-amber-400/20">Ensure accurate time</span>
+            </div>
+            <input type="time" id="tob-input" step="1" class="w-full liquid-glass rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-400/50 border border-white/15">
+          </div>
+          <div>
+            <label class="text-xs text-white/70 font-medium mb-1 block">Place of Birth (City, Country)</label>
+            <input type="text" id="pob-input" placeholder="e.g. London, UK or Mumbai, India" class="w-full liquid-glass rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 border border-white/15">
+          </div>
+          <button onclick="handleSaveBirthData()" class="w-full bg-white text-black font-semibold rounded-xl py-3 text-sm hover:scale-[1.02] active:scale-[0.98] transition-transform shadow-lg mt-2">
+            Submit & Record Details
+          </button>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- STEP 4B: 1 TO 249 HORARY SYSTEM (CURRENT TIME & PLACE) -->
+        <!-- ============================================== -->
+        <div id="step-horary-form" class="w-full space-y-3.5 hidden text-left">
+          <div>
+            <label class="text-xs text-white/70 font-medium mb-1 block">Pick a sacred number in your mind (1 to 249)</label>
+            <input type="number" id="horary-number-input" min="1" max="249" placeholder="e.g. 108" class="w-full liquid-glass rounded-xl px-4 py-3 text-lg font-bold text-center text-amber-300 placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-amber-400/50 border border-white/15">
+          </div>
+
+          <!-- Current Time & Date Display automatically captured -->
+          <div class="bg-white/5 rounded-2xl p-3 border border-white/10 space-y-1.5 text-xs text-white/80">
+            <div class="flex justify-between items-center">
+              <span class="text-white/60">Current Time:</span>
+              <span id="horary-current-time" class="font-semibold text-cyan-300">--:--:--</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-white/60">Current Date:</span>
+              <span id="horary-current-date" class="font-semibold text-cyan-300">--</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-white/60">Current Location:</span>
+              <span id="horary-current-location" class="font-semibold text-cyan-300">Local Time Zone</span>
+            </div>
+          </div>
+
+          <button onclick="handleSaveHoraryData()" class="w-full bg-white text-black font-semibold rounded-xl py-3 text-sm hover:scale-[1.02] active:scale-[0.98] transition-transform shadow-lg">
+            Submit & Record Details
+          </button>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- STEP 5: SUCCESS / STORED DATA CONFIRMATION -->
+        <!-- ============================================== -->
+        <div id="step-success" class="w-full space-y-4 hidden">
+          <div class="w-12 h-12 rounded-full bg-emerald-400/20 text-emerald-400 border border-emerald-400/30 flex items-center justify-center mx-auto">
+            <iconify-icon icon="lucide:check" class="text-2xl"></iconify-icon>
+          </div>
+          <div id="stored-summary-card" class="bg-white/5 rounded-2xl p-4 border border-white/10 text-left text-xs space-y-2 text-white/80">
+            <!-- Populated dynamically with stored data -->
+          </div>
+          <button onclick="closeEtherealConsultation()" class="w-full bg-white text-black font-semibold rounded-xl py-3 text-sm hover:scale-[1.02] active:scale-[0.98] transition-transform shadow-lg">
+            Return to Solar System
+          </button>
+        </div>
+
+      </div>
+    </div>
   </div>
 
   <script>
@@ -206,15 +408,8 @@
     const activePlanetBadge = document.getElementById('active-planet-badge');
     const activePlanetDot = document.getElementById('active-planet-dot');
     const activePlanetName = document.getElementById('active-planet-name');
-    const orbitViewBtn = document.getElementById('orbit-view-btn');
     const spaceBottomBar = document.getElementById('space-bottom-bar');
     const heroSpacer = document.getElementById('hero-spacer');
-
-    // Handler for "See your current time" button click
-    function handleSeeCurrentTime() {
-      console.log('See your current time button clicked');
-      // Ready for next step
-    }
 
     function toggleUniverseMode() {
       if (inSpaceMode) {
@@ -275,8 +470,6 @@
       mainActionBtn.textContent = "Enter Universe";
       activePlanetBadge.classList.remove('flex');
       activePlanetBadge.classList.add('hidden');
-      orbitViewBtn.classList.remove('flex');
-      orbitViewBtn.classList.add('hidden');
       
       spaceBottomBar.classList.add('opacity-0');
       setTimeout(() => {
@@ -348,14 +541,13 @@
       raycaster = new THREE.Raycaster();
       mouse = new THREE.Vector2();
 
-      // 1. STARFIELD (Fixed: Placed on distant celestial sphere r=750 so NO stars ever render on or in front of planets!)
+      // 1. STARFIELD (Placed on distant sphere r=750+ so no stars overlap planets)
       const starGeo = new THREE.BufferGeometry();
       const starCount = 3500;
       const starPositions = new Float32Array(starCount * 3);
       const starColors = new Float32Array(starCount * 3);
 
       for (let i = 0; i < starCount * 3; i += 3) {
-        // Spherical distribution at radius 750 to 950 (infinite deep space background)
         const theta = Math.random() * Math.PI * 2;
         const phi = Math.acos((Math.random() * 2) - 1);
         const r = 750 + Math.random() * 200;
@@ -413,7 +605,7 @@
           scene.add(ringMesh);
         }
 
-        // Procedural Base Texture (Guarantees instant authentic colors)
+        // Procedural Base Texture
         const proceduralTex = generatePlanetTexture(config.name, config.color);
 
         // Planet Sphere Geometry & Material
@@ -512,12 +704,10 @@
         // Animate Orbits & Rotations
         celestialBodies.forEach(body => {
           if (focusedBody === body) {
-            // Selected planet is STATIONARY in orbit so user can inspect it steadily without it moving away!
+            // Selected planet is STATIONARY in orbit for inspection
           } else {
-            // Self-rotation on axis
             body.mesh.rotation.y += 0.008;
 
-            // Orbital Revolution around Sun for non-selected planets
             if (body.config.orbitRadius > 0) {
               body.mesh.userData.currentAngle += body.config.orbitSpeed * 0.35;
               const angle = body.mesh.userData.currentAngle;
@@ -532,29 +722,24 @@
           const worldPos = new THREE.Vector3();
           focusedBody.mesh.getWorldPosition(worldPos);
 
-          // Calculate distance to guarantee 100% of the planet (and Saturn's rings) fits phone screen without edge clipping
           const aspect = window.innerWidth / window.innerHeight;
           const radiusWithRings = focusedBody.config.hasRing ? focusedBody.config.size * 2.35 : focusedBody.config.size;
           const vFovRad = (camera.fov * Math.PI) / 180;
           
           let camDistance;
           if (aspect < 1) {
-            // Mobile Portrait: Horizontal FOV is narrower, calculate distance based on horizontal width with safety margin
             const hFovRad = 2 * Math.atan(Math.tan(vFovRad / 2) * aspect);
             camDistance = (radiusWithRings * 1.55) / Math.tan(hFovRad / 2);
           } else {
-            // Landscape Desktop: Calculate based on vertical FOV
             camDistance = (radiusWithRings * 1.4) / Math.tan(vFovRad / 2);
           }
 
           cameraTargetPos.set(worldPos.x, worldPos.y + (focusedBody.config.size * 0.15), worldPos.z + camDistance);
           cameraLookAtPos.copy(worldPos);
 
-          // Apply user touch rotation to the stationary focused planet
           focusedBody.mesh.rotation.y += (focusedPlanetRotation.y - focusedBody.mesh.rotation.y) * 0.1;
           focusedBody.mesh.rotation.x += (focusedPlanetRotation.x - focusedBody.mesh.rotation.x) * 0.1;
         } else if (isOrbitOverview) {
-          // Wide angle view showing the solar system in orbit
           const aspect = window.innerWidth / window.innerHeight;
           const isMobile = aspect < 1 || window.innerWidth < 768;
           cameraTargetPos.set(0, isMobile ? 58 : 38, isMobile ? 54 : 42);
@@ -576,9 +761,6 @@
       window.addEventListener('resize', onWindowResize);
     }
 
-    // ==========================================
-    // PLANET SELECTION & ZOOM FUNCTIONS
-    // ==========================================
     function selectPlanetByName(name) {
       const found = celestialBodies.find(b => b.config.name === name);
       if (!found) return;
@@ -586,13 +768,10 @@
       focusedBody = found;
       isOrbitOverview = false;
 
-      // Update UI Header Badge (Clean: No 2K text)
+      // Update UI Header Badge
       activePlanetName.textContent = found.config.label;
       activePlanetDot.style.backgroundColor = '#' + found.config.color.toString(16).padStart(6, '0');
-      orbitViewBtn.classList.remove('hidden');
-      orbitViewBtn.classList.add('flex');
 
-      // Reset rotation controls
       focusedPlanetRotation = { x: 0, y: found.mesh.rotation.y };
     }
 
@@ -601,13 +780,8 @@
       isOrbitOverview = true;
       activePlanetName.textContent = "Solar System";
       activePlanetDot.style.backgroundColor = '#ff6600';
-      orbitViewBtn.classList.remove('flex');
-      orbitViewBtn.classList.add('hidden');
     }
 
-    // ==========================================
-    // AUTHENTIC FIERY ORANGE SUN & PLANET TEXTURES
-    // ==========================================
     function generatePlanetTexture(name, baseHex) {
       const canvas = document.createElement('canvas');
       canvas.width = 1024;
@@ -615,7 +789,6 @@
       const ctx = canvas.getContext('2d');
 
       if (name === 'sun') {
-        // Deep Blazing Solar Orange Plasma Gradient
         const grad = ctx.createLinearGradient(0, 0, 0, 512);
         grad.addColorStop(0, '#ff3300');
         grad.addColorStop(0.25, '#ff6600');
@@ -625,7 +798,6 @@
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, 1024, 512);
 
-        // Blazing Solar Granulation, Prominences & Sunspots
         for (let i = 0; i < 600; i++) {
           ctx.fillStyle = 'rgba(255, 200, 50, ' + (Math.random() * 0.45) + ')';
           ctx.beginPath();
@@ -633,7 +805,6 @@
           ctx.fill();
         }
 
-        // Sunspots
         for (let i = 0; i < 15; i++) {
           ctx.fillStyle = 'rgba(80, 15, 0, 0.7)';
           ctx.beginPath();
@@ -641,7 +812,6 @@
           ctx.fill();
         }
       } else if (name === 'mercury') {
-        // Silvery-Gray Cratered Regolith
         ctx.fillStyle = '#8f9499';
         ctx.fillRect(0, 0, 1024, 512);
         for (let i = 0; i < 350; i++) {
@@ -651,7 +821,6 @@
           ctx.fill();
         }
       } else if (name === 'venus') {
-        // Golden-Cream Dense Cloud Atmosphere
         const grad = ctx.createLinearGradient(0, 0, 0, 512);
         grad.addColorStop(0, '#fef08a');
         grad.addColorStop(0.5, '#eab308');
@@ -665,7 +834,6 @@
           ctx.fill();
         }
       } else if (name === 'earth') {
-        // Vibrant Blue Ocean & Green Continents
         ctx.fillStyle = '#1d4ed8';
         ctx.fillRect(0, 0, 1024, 512);
         ctx.fillStyle = '#16a34a';
@@ -681,7 +849,6 @@
           ctx.fill();
         }
       } else if (name === 'moon') {
-        // Lunar Gray with Dark Basaltic Maria
         ctx.fillStyle = '#b8b8b8';
         ctx.fillRect(0, 0, 1024, 512);
         ctx.fillStyle = 'rgba(45, 45, 50, 0.65)';
@@ -691,7 +858,6 @@
           ctx.fill();
         }
       } else if (name === 'mars') {
-        // Rusty Crimson-Ochre Red Planet
         ctx.fillStyle = '#b91c1c';
         ctx.fillRect(0, 0, 1024, 512);
         ctx.fillStyle = '#7f1d1d';
@@ -700,11 +866,9 @@
           ctx.arc(Math.random() * 1024, Math.random() * 512, Math.random() * 45 + 10, 0, Math.PI * 2);
           ctx.fill();
         }
-        // Polar Ice Cap
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, 1024, 35);
       } else if (name === 'jupiter') {
-        // Butterscotch & Terracotta Gas Bands with Great Red Spot
         const grad = ctx.createLinearGradient(0, 0, 0, 512);
         grad.addColorStop(0, '#78350f');
         grad.addColorStop(0.2, '#d97706');
@@ -715,13 +879,11 @@
         grad.addColorStop(1, '#78350f');
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, 1024, 512);
-        // Great Red Spot
         ctx.fillStyle = '#dc2626';
         ctx.beginPath();
         ctx.ellipse(620, 310, 55, 32, 0, 0, Math.PI * 2);
         ctx.fill();
       } else if (name === 'saturn') {
-        // Golden Gas Bands
         const grad = ctx.createLinearGradient(0, 0, 0, 512);
         grad.addColorStop(0, '#ca8a04');
         grad.addColorStop(0.3, '#fef08a');
@@ -730,7 +892,6 @@
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, 1024, 512);
       } else {
-        // Uranus / Neptune (Aquamarine / Azure Blue)
         const grad = ctx.createLinearGradient(0, 0, 0, 512);
         grad.addColorStop(0, '#0284c7');
         grad.addColorStop(0.5, '#38bdf8');
@@ -742,9 +903,6 @@
       return new THREE.CanvasTexture(canvas);
     }
 
-    // ==========================================
-    // POINTER DRAG & RAYCASTING PLANET TAP
-    // ==========================================
     function setupSpaceInteractions(canvas) {
       let pointerDownPos = { x: 0, y: 0 };
       let dragDistance = 0;
@@ -780,7 +938,6 @@
         if (!inSpaceMode) return;
         isDragging = false;
 
-        // If it was a tap/click without dragging, raycast to select planet directly from 3D space
         if (dragDistance < 8) {
           mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
           mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
@@ -819,6 +976,269 @@
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
+    }
+
+    // =========================================================================
+    // ETHEREAL AI VOICE & CONVERSATIONAL ASTROLOGY LOGIC
+    // =========================================================================
+    let voiceAudioEnabled = true;
+    let consultationState = {
+      name: '',
+      question: '',
+      hasAccurateBirthDetails: null,
+      dob: '',
+      tob: '',
+      pob: '',
+      horaryNumber: null,
+      currentTime: '',
+      currentDate: '',
+      currentLocation: '',
+      timestamp: null
+    };
+
+    const etherealModal = document.getElementById('ethereal-modal');
+    const assistantText = document.getElementById('assistant-text');
+    const avatarGlowRing = document.getElementById('avatar-glow-ring');
+    const speechWave = document.getElementById('speech-wave');
+    const voiceIcon = document.getElementById('voice-icon');
+
+    const stepName = document.getElementById('step-name');
+    const stepQuestion = document.getElementById('step-question');
+    const stepChoice = document.getElementById('step-choice');
+    const stepBirthForm = document.getElementById('step-birth-form');
+    const stepHoraryForm = document.getElementById('step-horary-form');
+    const stepSuccess = document.getElementById('step-success');
+
+    function toggleVoiceAudio() {
+      voiceAudioEnabled = !voiceAudioEnabled;
+      if (voiceAudioEnabled) {
+        voiceIcon.setAttribute('icon', 'lucide:volume-2');
+      } else {
+        voiceIcon.setAttribute('icon', 'lucide:volume-x');
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+        }
+        stopSpeakingAnimation();
+      }
+    }
+
+    function speakText(text) {
+      if (!voiceAudioEnabled) return;
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        
+        // Find best soft female voice
+        const voices = window.speechSynthesis.getVoices();
+        const femaleVoice = voices.find(v => (v.name.includes('Female') || v.name.includes('Zira') || v.name.includes('Samantha') || v.name.includes('Google UK English Female') || v.name.includes('Karen') || v.lang.includes('en')));
+        if (femaleVoice) {
+          utterance.voice = femaleVoice;
+        }
+        utterance.pitch = 1.15; // Soft, gentle female pitch
+        utterance.rate = 0.95;  // Calm, relaxed cadence
+
+        utterance.onstart = () => {
+          startSpeakingAnimation();
+        };
+        utterance.onend = () => {
+          stopSpeakingAnimation();
+        };
+        utterance.onerror = () => {
+          stopSpeakingAnimation();
+        };
+
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    function startSpeakingAnimation() {
+      avatarGlowRing.classList.remove('avatar-float');
+      avatarGlowRing.classList.add('avatar-speaking');
+      speechWave.classList.remove('hidden');
+    }
+
+    function stopSpeakingAnimation() {
+      avatarGlowRing.classList.remove('avatar-speaking');
+      avatarGlowRing.classList.add('avatar-float');
+      speechWave.classList.add('hidden');
+    }
+
+    function openEtherealConsultation() {
+      etherealModal.classList.remove('hidden');
+      etherealModal.classList.add('flex');
+      setTimeout(() => {
+        etherealModal.classList.remove('opacity-0');
+      }, 50);
+
+      // Reset to Step 1: Greeting & Name
+      showStep('name');
+      const greeting = "Welcome to Universe. What is your name?";
+      assistantText.textContent = greeting;
+      setTimeout(() => {
+        speakText(greeting);
+      }, 400);
+    }
+
+    function closeEtherealConsultation() {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      stopSpeakingAnimation();
+      etherealModal.classList.add('opacity-0');
+      setTimeout(() => {
+        etherealModal.classList.add('hidden');
+        etherealModal.classList.remove('flex');
+      }, 400);
+    }
+
+    function showStep(step) {
+      stepName.classList.add('hidden');
+      stepQuestion.classList.add('hidden');
+      stepChoice.classList.add('hidden');
+      stepBirthForm.classList.add('hidden');
+      stepHoraryForm.classList.add('hidden');
+      stepSuccess.classList.add('hidden');
+
+      if (step === 'name') stepName.classList.remove('hidden');
+      if (step === 'question') stepQuestion.classList.remove('hidden');
+      if (step === 'choice') stepChoice.classList.remove('hidden');
+      if (step === 'birth') stepBirthForm.classList.remove('hidden');
+      if (step === 'horary') stepHoraryForm.classList.remove('hidden');
+      if (step === 'success') stepSuccess.classList.remove('hidden');
+    }
+
+    // Step 1 -> Step 2
+    function handleNameSubmit() {
+      const name = document.getElementById('user-name-input').value.trim();
+      if (!name) {
+        speakText("Please share your name with me.");
+        return;
+      }
+      consultationState.name = name;
+      showStep('question');
+
+      const questionPrompt = `Nice to meet you, ${name}. What would you like to know about your future, or is there any problem or question you are facing?`;
+      assistantText.textContent = questionPrompt;
+      speakText(questionPrompt);
+    }
+
+    // Step 2 -> Step 3
+    function handleQuestionSubmit() {
+      const question = document.getElementById('user-question-input').value.trim();
+      if (!question) {
+        speakText("Please share your question or the topic you want guidance on.");
+        return;
+      }
+      consultationState.question = question;
+      showStep('choice');
+
+      const choicePrompt = `Thank you. Do you have your accurate birth details — including your date, exact time, and place of birth?`;
+      assistantText.textContent = choicePrompt;
+      speakText(choicePrompt);
+    }
+
+    // Step 3 -> Step 4A or 4B
+    function handleBirthChoice(hasDetails) {
+      consultationState.hasAccurateBirthDetails = hasDetails;
+
+      if (hasDetails) {
+        showStep('birth');
+        const prompt = "Please provide your birth date, exact time of birth, and place of birth. Make sure your birth time is accurate.";
+        assistantText.textContent = prompt;
+        speakText(prompt);
+      } else {
+        showStep('horary');
+        
+        // Auto-detect current time, date, and timezone location
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+        const dateStr = now.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+        const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "Local Time";
+
+        document.getElementById('horary-current-time').textContent = timeStr;
+        document.getElementById('horary-current-date').textContent = dateStr;
+        document.getElementById('horary-current-location').textContent = timeZone;
+
+        consultationState.currentTime = timeStr;
+        consultationState.currentDate = dateStr;
+        consultationState.currentLocation = timeZone;
+
+        const prompt = "Let's use a new era of astrology: the 1 to 249 system. Focus your mind on your question, pick a number between 1 and 249, and your current time and location will be aligned.";
+        assistantText.textContent = prompt;
+        speakText(prompt);
+      }
+    }
+
+    // Step 4A Submit
+    function handleSaveBirthData() {
+      const dob = document.getElementById('dob-input').value;
+      const tob = document.getElementById('tob-input').value;
+      const pob = document.getElementById('pob-input').value.trim();
+
+      if (!dob || !tob || !pob) {
+        speakText("Please fill in your birth date, time, and place of birth.");
+        return;
+      }
+
+      consultationState.dob = dob;
+      consultationState.tob = tob;
+      consultationState.pob = pob;
+      consultationState.timestamp = new Date().toISOString();
+
+      saveAndConfirmData('natal');
+    }
+
+    // Step 4B Submit
+    function handleSaveHoraryData() {
+      const numVal = parseInt(document.getElementById('horary-number-input').value, 10);
+      if (isNaN(numVal) || numVal < 1 || numVal > 249) {
+        speakText("Please pick a valid number between 1 and 249.");
+        return;
+      }
+
+      consultationState.horaryNumber = numVal;
+      consultationState.timestamp = new Date().toISOString();
+
+      saveAndConfirmData('horary_kp');
+    }
+
+    function saveAndConfirmData(mode) {
+      // Save to localStorage
+      try {
+        localStorage.setItem('universe_consultation_data', JSON.stringify(consultationState));
+        console.log('Saved Consultation Data:', consultationState);
+      } catch (err) {
+        console.error('Failed to save to localStorage:', err);
+      }
+
+      showStep('success');
+
+      // Populate Summary Card
+      const summaryCard = document.getElementById('stored-summary-card');
+      if (mode === 'natal') {
+        summaryCard.innerHTML = `
+          <div class="text-cyan-300 font-semibold text-sm mb-1">Natal Astrology Profile Stored</div>
+          <div><span class="text-white/50">Name:</span> <strong class="text-white">${consultationState.name}</strong></div>
+          <div><span class="text-white/50">Question:</span> <span class="text-white">${consultationState.question}</span></div>
+          <div><span class="text-white/50">Birth Date:</span> <span class="text-white">${consultationState.dob}</span></div>
+          <div><span class="text-white/50">Birth Time:</span> <span class="text-white">${consultationState.tob}</span></div>
+          <div><span class="text-white/50">Birth Place:</span> <span class="text-white">${consultationState.pob}</span></div>
+        `;
+      } else {
+        summaryCard.innerHTML = `
+          <div class="text-amber-300 font-semibold text-sm mb-1">1 to 249 Horary KP Profile Stored</div>
+          <div><span class="text-white/50">Name:</span> <strong class="text-white">${consultationState.name}</strong></div>
+          <div><span class="text-white/50">Question:</span> <span class="text-white">${consultationState.question}</span></div>
+          <div><span class="text-white/50">Sacred Number:</span> <strong class="text-amber-300 text-sm">#${consultationState.horaryNumber}</strong></div>
+          <div><span class="text-white/50">Consultation Time:</span> <span class="text-white">${consultationState.currentTime}</span></div>
+          <div><span class="text-white/50">Consultation Date:</span> <span class="text-white">${consultationState.currentDate}</span></div>
+          <div><span class="text-white/50">Location:</span> <span class="text-white">${consultationState.currentLocation}</span></div>
+        `;
+      }
+
+      const successPrompt = `Thank you, ${consultationState.name}. Your details and question have been securely recorded. Ready for chart generation in the next step.`;
+      assistantText.textContent = successPrompt;
+      speakText(successPrompt);
     }
   </script>
 </body>
