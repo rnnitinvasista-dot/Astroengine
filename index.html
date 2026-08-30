@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Universe — See the shape of the noise</title>
-  <meta name="description" content="Explore all 9 moving planets in real-time 3D orbit with photorealistic 2K NASA textures.">
+  <meta name="description" content="Explore the solar system in real-time 3D orbit with photorealistic 2K NASA textures.">
   
   <!-- Tailwind CSS, Three.js, & Iconify -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -131,8 +131,8 @@
 
         <!-- Center Active Planet Badge (Shown in Space Mode) -->
         <div id="active-planet-badge" class="hidden items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs sm:text-sm font-medium text-white shadow-lg">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span id="active-planet-name">9 Planets Moving in Orbit</span>
+          <span id="active-planet-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+          <span id="active-planet-name">Solar System</span>
         </div>
 
         <!-- Right Group -->
@@ -160,7 +160,7 @@
       
       <p class="text-white/80 text-xs sm:text-sm md:text-base leading-relaxed max-w-xl md:whitespace-nowrap mb-8 md:mb-10 px-3"
          style="text-shadow: 0 0 28px rgba(0, 0, 0, 0.7), 0 1px 10px rgba(0, 0, 0, 0.5);">
-        Observe all 9 moving planets in real-time orbit. Tap any planet in space to inspect with stationary 2K texture.
+        Gaze upward to travel through the solar system and observe the planets in photorealistic 2K detail.
       </p>
 
       <!-- Action Button Pill -->
@@ -178,7 +178,7 @@
       </div>
     </main>
 
-    <!-- Bottom Instruction Hint (Visible in Space Mode, completely clean without buttons) -->
+    <!-- Bottom Instruction Hint (Clean, minimalist, no buttons) -->
     <div id="space-tap-hint" class="relative z-30 px-4 pb-4 pt-1 text-center hidden opacity-0 transition-opacity duration-700">
       <div class="inline-flex items-center gap-2 text-xs text-white/70 px-4 py-1.5 rounded-full liquid-glass">
         <iconify-icon icon="lucide:pointer" class="text-sm text-white animate-pulse"></iconify-icon>
@@ -201,6 +201,7 @@
     const spaceCanvas = document.getElementById('space-canvas');
     const mainActionBtn = document.getElementById('main-action-btn');
     const activePlanetBadge = document.getElementById('active-planet-badge');
+    const activePlanetDot = document.getElementById('active-planet-dot');
     const activePlanetName = document.getElementById('active-planet-name');
     const orbitViewBtn = document.getElementById('orbit-view-btn');
     const spaceTapHint = document.getElementById('space-tap-hint');
@@ -246,7 +247,7 @@
         initThreeSpace();
       }
 
-      // Start in full 9-Planet Solar System Orbit View
+      // Start in full Solar System Orbit View
       zoomToSolarOrbit();
     }
 
@@ -281,11 +282,11 @@
     }
 
     // ==========================================
-    // THREE.JS 9-PLANET SOLAR SYSTEM & 2K TEXTURES
+    // THREE.JS SOLAR SYSTEM & PHOTOREALISTIC 2K PLANETS
     // ==========================================
     let threeInitialized = false;
     let scene, camera, renderer, raycaster, mouse;
-    let starField;
+    let starField, sunCoronaMesh;
     let celestialBodies = [];
     let focusedBody = null;
     let isOrbitOverview = true;
@@ -302,17 +303,17 @@
     let isUserInteracting = false;
     let userInteractionTimeout = null;
 
-    // 9 Planet Specs (Sun + 8 Planetary bodies)
+    // Authentic Astronomical & Vedic Celestial Configs
     const PLANET_CONFIGS = [
-      { name: 'sun', label: 'Sun (Surya)', size: 3.2, orbitRadius: 0, orbitSpeed: 0, color: 0xffa500, emissive: 0xff8800, texture: 'sun_2k.jpg' },
-      { name: 'mercury', label: 'Mercury (Budha)', size: 0.7, orbitRadius: 6.5, orbitSpeed: 0.024, color: 0x9e9e9e, texture: 'mercury_2k.jpg' },
-      { name: 'venus', label: 'Venus (Shukra)', size: 1.1, orbitRadius: 10.0, orbitSpeed: 0.018, color: 0xe5c158, texture: 'venus_2k.jpg' },
-      { name: 'earth', label: 'Earth (Prithvi)', size: 1.25, orbitRadius: 14.5, orbitSpeed: 0.014, color: 0x2563eb, texture: 'earth_2k.jpg' },
-      { name: 'moon', label: 'Moon (Chandra)', size: 0.65, orbitRadius: 17.5, orbitSpeed: 0.013, color: 0xd4d4d4, texture: 'moon_2k.jpg' },
-      { name: 'mars', label: 'Mars (Mangala)', size: 0.85, orbitRadius: 21.5, orbitSpeed: 0.010, color: 0xef4444, texture: 'mars_2k.jpg' },
-      { name: 'jupiter', label: 'Jupiter (Guru)', size: 2.2, orbitRadius: 27.5, orbitSpeed: 0.007, color: 0xb45309, texture: 'jupiter_2k.jpg' },
-      { name: 'saturn', label: 'Saturn (Shani)', size: 1.9, orbitRadius: 34.0, orbitSpeed: 0.005, color: 0xd97706, hasRing: true, texture: 'saturn_2k.jpg' },
-      { name: 'uranus', label: 'Uranus', size: 1.4, orbitRadius: 40.5, orbitSpeed: 0.0035, color: 0x06b6d4, texture: 'uranus_2k.jpg' }
+      { name: 'sun', label: 'Sun', size: 3.2, orbitRadius: 0, orbitSpeed: 0, color: 0xffb703, emissive: 0xff8c00, texture: 'sun_2k.jpg' },
+      { name: 'mercury', label: 'Mercury', size: 0.7, orbitRadius: 6.8, orbitSpeed: 0.024, color: 0x9ca3af, texture: 'mercury_2k.jpg' },
+      { name: 'venus', label: 'Venus', size: 1.1, orbitRadius: 10.5, orbitSpeed: 0.018, color: 0xfde047, texture: 'venus_2k.jpg' },
+      { name: 'earth', label: 'Earth', size: 1.25, orbitRadius: 15.0, orbitSpeed: 0.014, color: 0x3b82f6, texture: 'earth_2k.jpg' },
+      { name: 'moon', label: 'Moon', size: 0.65, orbitRadius: 18.2, orbitSpeed: 0.013, color: 0xe5e7eb, texture: 'moon_2k.jpg' },
+      { name: 'mars', label: 'Mars', size: 0.85, orbitRadius: 22.0, orbitSpeed: 0.010, color: 0xef4444, texture: 'mars_2k.jpg' },
+      { name: 'jupiter', label: 'Jupiter', size: 2.2, orbitRadius: 28.0, orbitSpeed: 0.007, color: 0xd97706, texture: 'jupiter_2k.jpg' },
+      { name: 'saturn', label: 'Saturn', size: 1.9, orbitRadius: 35.0, orbitSpeed: 0.005, color: 0xfacc15, hasRing: true, texture: 'saturn_2k.jpg' },
+      { name: 'uranus', label: 'Uranus', size: 1.4, orbitRadius: 41.5, orbitSpeed: 0.0035, color: 0x38bdf8, texture: 'uranus_2k.jpg' }
     ];
 
     function initThreeSpace() {
@@ -334,45 +335,46 @@
       renderer.setSize(width, height);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.2;
+      renderer.toneMappingExposure = 1.3;
 
       raycaster = new THREE.Raycaster();
       mouse = new THREE.Vector2();
 
-      // 1. COSMIC STARFIELD
+      // 1. STARFIELD
       const starGeo = new THREE.BufferGeometry();
-      const starCount = 3200;
+      const starCount = 3500;
       const starPositions = new Float32Array(starCount * 3);
       const starColors = new Float32Array(starCount * 3);
 
       for (let i = 0; i < starCount * 3; i += 3) {
-        starPositions[i] = (Math.random() - 0.5) * 900;
-        starPositions[i + 1] = (Math.random() - 0.5) * 900;
-        starPositions[i + 2] = (Math.random() - 0.5) * 900;
+        starPositions[i] = (Math.random() - 0.5) * 1000;
+        starPositions[i + 1] = (Math.random() - 0.5) * 1000;
+        starPositions[i + 2] = (Math.random() - 0.5) * 1000;
 
         const c = Math.random();
-        if (c > 0.85) { starColors[i] = 0.8; starColors[i+1] = 0.9; starColors[i+2] = 1.0; }
-        else if (c > 0.7) { starColors[i] = 1.0; starColors[i+1] = 0.85; starColors[i+2] = 0.65; }
-        else { starColors[i] = 0.95; starColors[i+1] = 0.95; starColors[i+2] = 0.95; }
+        if (c > 0.85) { starColors[i] = 0.85; starColors[i+1] = 0.92; starColors[i+2] = 1.0; }
+        else if (c > 0.7) { starColors[i] = 1.0; starColors[i+1] = 0.88; starColors[i+2] = 0.7; }
+        else { starColors[i] = 0.98; starColors[i+1] = 0.98; starColors[i+2] = 0.98; }
       }
       starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
       starGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
-      starField = new THREE.Points(starGeo, new THREE.PointsMaterial({ size: 1.2, vertexColors: true, transparent: true, opacity: 0.9 }));
+      starField = new THREE.Points(starGeo, new THREE.PointsMaterial({ size: 1.3, vertexColors: true, transparent: true, opacity: 0.95 }));
       scene.add(starField);
 
       // 2. CELESTIAL LIGHTING
-      const ambientLight = new THREE.AmbientLight(0x222233, 0.85);
+      const ambientLight = new THREE.AmbientLight(0x282838, 0.9);
       scene.add(ambientLight);
 
-      const sunPointLight = new THREE.PointLight(0xffffff, 3.2, 500);
+      // Radiant Point Light at the Sun's core
+      const sunPointLight = new THREE.PointLight(0xfffaed, 3.8, 600, 0.4);
       sunPointLight.position.set(0, 0, 0);
       scene.add(sunPointLight);
 
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 1.6);
-      directionalLight.position.set(20, 20, 20);
-      scene.add(directionalLight);
+      const fillLight = new THREE.DirectionalLight(0xffffff, 1.4);
+      fillLight.position.set(30, 25, 20);
+      scene.add(fillLight);
 
-      // 3. TEXTURE LOADER & 9 PLANET MESHES
+      // 3. TEXTURE LOADER & CELESTIAL BODIES
       const textureLoader = new THREE.TextureLoader();
       textureLoader.setCrossOrigin('anonymous');
 
@@ -383,14 +385,14 @@
 
         // Glowing Orbital Path Ring
         if (config.orbitRadius > 0) {
-          const ringGeo = new THREE.RingGeometry(config.orbitRadius - 0.05, config.orbitRadius + 0.05, 128);
-          const ringMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.09, side: THREE.DoubleSide });
+          const ringGeo = new THREE.RingGeometry(config.orbitRadius - 0.06, config.orbitRadius + 0.06, 128);
+          const ringMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.1, side: THREE.DoubleSide });
           const ringMesh = new THREE.Mesh(ringGeo, ringMat);
           ringMesh.rotation.x = Math.PI / 2;
           scene.add(ringMesh);
         }
 
-        // Procedural Base Texture (Guarantees instant realistic render)
+        // Procedural Base Texture (Guarantees instant authentic colors)
         const proceduralTex = generatePlanetTexture(config.name, config.color);
 
         // Planet Sphere Geometry & Material
@@ -398,19 +400,44 @@
         let mat;
 
         if (config.name === 'sun') {
+          // Radiant Sun Material with authentic solar brilliance
           mat = new THREE.MeshStandardMaterial({
             map: proceduralTex,
-            emissive: 0xff7700,
-            emissiveIntensity: 0.9,
-            roughness: 0.3
+            emissive: 0xff8c00,
+            emissiveIntensity: 1.2,
+            roughness: 0.2,
+            metalness: 0.0
           });
+
+          // Sun Glowing Corona Flare Aura
+          const coronaGeo = new THREE.SphereGeometry(config.size * 1.2, 32, 32);
+          const coronaMat = new THREE.ShaderMaterial({
+            vertexShader: `
+              varying vec3 vNormal;
+              void main() {
+                vNormal = normalize(normalMatrix * normal);
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+              }
+            `,
+            fragmentShader: `
+              varying vec3 vNormal;
+              void main() {
+                float intensity = pow(0.7 - dot(vNormal, vec3(0, 0, 1.0)), 2.2);
+                gl_FragColor = vec4(1.0, 0.75, 0.2, 1.0) * intensity * 0.9;
+              }
+            `,
+            blending: THREE.AdditiveBlending,
+            side: THREE.BackSide,
+            transparent: true
+          });
+          sunCoronaMesh = new THREE.Mesh(coronaGeo, coronaMat);
         } else {
           mat = new THREE.MeshStandardMaterial({
             map: proceduralTex,
             bumpMap: proceduralTex,
             bumpScale: 0.045,
-            roughness: 0.85,
-            metalness: 0.05
+            roughness: 0.82,
+            metalness: 0.04
           });
         }
 
@@ -419,10 +446,14 @@
         mesh.userData = { config: config, currentAngle: Math.random() * Math.PI * 2 };
         orbitGroup.add(mesh);
 
-        // Saturn Ring
+        if (config.name === 'sun' && sunCoronaMesh) {
+          mesh.add(sunCoronaMesh);
+        }
+
+        // Saturn Ring with authentic golden-ice shading
         if (config.hasRing) {
-          const sRingGeo = new THREE.RingGeometry(config.size * 1.4, config.size * 2.3, 64);
-          const sRingMat = new THREE.MeshBasicMaterial({ color: 0xd4c29d, side: THREE.DoubleSide, transparent: true, opacity: 0.85 });
+          const sRingGeo = new THREE.RingGeometry(config.size * 1.35, config.size * 2.35, 64);
+          const sRingMat = new THREE.MeshBasicMaterial({ color: 0xecd5a4, side: THREE.DoubleSide, transparent: true, opacity: 0.9 });
           const sRing = new THREE.Mesh(sRingGeo, sRingMat);
           sRing.rotation.x = Math.PI / 2.3;
           mesh.add(sRing);
@@ -450,20 +481,19 @@
         });
       });
 
-      // 4. INTERACTIVE POINTER & CLICK/TAP LISTENERS
+      // 4. INTERACTIVE POINTER LISTENERS
       setupSpaceInteractions(canvas);
 
       // 5. RENDER & ORBITAL ANIMATION LOOP
       function animate() {
         requestAnimationFrame(animate);
 
-        // Animate Planet Orbits & Self-Rotations
+        // Animate Orbits & Rotations
         celestialBodies.forEach(body => {
-          // If a planet is currently selected/enlarged, IT STOPS MOVING in orbit so user can inspect it comfortably!
           if (focusedBody === body) {
-            // Selected planet is stationary in orbit. User can freely drag & rotate its sphere.
+            // Selected planet is STATIONARY in orbit so user can inspect it steadily without it moving away!
           } else {
-            // Self-rotation on its axis for all other planets
+            // Self-rotation on axis
             body.mesh.rotation.y += 0.008;
 
             // Orbital Revolution around Sun for non-selected planets
@@ -476,26 +506,37 @@
           }
         });
 
-        // Camera Smooth Lerp to Focused Planet or Orbit Overview
+        // Camera Smooth Lerp to Focused Planet (Framed to fit mobile screens completely)
         if (focusedBody) {
           const worldPos = new THREE.Vector3();
           focusedBody.mesh.getWorldPosition(worldPos);
 
-          // Calculate ideal camera distance to enlarge the stationary planet and fit mobile
-          const isMobile = window.innerWidth < 768;
-          const distMultiplier = isMobile ? 3.3 : 2.7;
-          const camDistance = Math.max(2.8, focusedBody.config.size * distMultiplier);
+          // Calculate distance to guarantee 100% of the planet (and Saturn's rings) fits phone screen without edge clipping
+          const aspect = window.innerWidth / window.innerHeight;
+          const radiusWithRings = focusedBody.config.hasRing ? focusedBody.config.size * 2.35 : focusedBody.config.size;
+          const vFovRad = (camera.fov * Math.PI) / 180;
+          
+          let camDistance;
+          if (aspect < 1) {
+            // Mobile Portrait: Horizontal FOV is narrower, calculate distance based on horizontal width
+            const hFovRad = 2 * Math.atan(Math.tan(vFovRad / 2) * aspect);
+            camDistance = (radiusWithRings * 1.35) / Math.tan(hFovRad / 2);
+          } else {
+            // Landscape Desktop: Calculate based on vertical FOV
+            camDistance = (radiusWithRings * 1.3) / Math.tan(vFovRad / 2);
+          }
 
-          cameraTargetPos.set(worldPos.x, worldPos.y + 0.3, worldPos.z + camDistance);
+          cameraTargetPos.set(worldPos.x, worldPos.y + (focusedBody.config.size * 0.15), worldPos.z + camDistance);
           cameraLookAtPos.copy(worldPos);
 
           // Apply user touch rotation to the stationary focused planet
           focusedBody.mesh.rotation.y += (focusedPlanetRotation.y - focusedBody.mesh.rotation.y) * 0.1;
           focusedBody.mesh.rotation.x += (focusedPlanetRotation.x - focusedBody.mesh.rotation.x) * 0.1;
         } else if (isOrbitOverview) {
-          // Wide angle view showing all 9 moving planets in real-time orbit
-          const isMobile = window.innerWidth < 768;
-          cameraTargetPos.set(0, isMobile ? 52 : 38, isMobile ? 48 : 42);
+          // Wide angle view showing the solar system in orbit
+          const aspect = window.innerWidth / window.innerHeight;
+          const isMobile = aspect < 1 || window.innerWidth < 768;
+          cameraTargetPos.set(0, isMobile ? 56 : 38, isMobile ? 52 : 42);
           cameraLookAtPos.set(0, 0, 0);
         }
 
@@ -525,7 +566,8 @@
       isOrbitOverview = false;
 
       // Update UI Header Badge
-      activePlanetName.textContent = `${found.config.label} • Stationary 2K View`;
+      activePlanetName.textContent = `${found.config.label} • 2K`;
+      activePlanetDot.style.backgroundColor = '#' + found.config.color.toString(16).padStart(6, '0');
       orbitViewBtn.classList.remove('hidden');
       orbitViewBtn.classList.add('flex');
       hintText.textContent = `Drag with finger or mouse to rotate ${found.config.label}`;
@@ -537,14 +579,15 @@
     function zoomToSolarOrbit() {
       focusedBody = null;
       isOrbitOverview = true;
-      activePlanetName.textContent = "9 Planets Moving in Orbit";
+      activePlanetName.textContent = "Solar System";
+      activePlanetDot.style.backgroundColor = '#fbbf24';
       orbitViewBtn.classList.remove('flex');
       orbitViewBtn.classList.add('hidden');
-      hintText.textContent = "Tap any planet in space to enlarge and inspect";
+      hintText.textContent = "Tap any planet in space to inspect in 2K";
     }
 
     // ==========================================
-    // PROCEDURAL HIGH-RES TEXTURE GENERATORS (2K)
+    // AUTHENTIC CELESTIAL COLOR TEXTURES (2K)
     // ==========================================
     function generatePlanetTexture(name, baseHex) {
       const canvas = document.createElement('canvas');
@@ -552,70 +595,121 @@
       canvas.height = 512;
       const ctx = canvas.getContext('2d');
 
-      const color = '#' + baseHex.toString(16).padStart(6, '0');
-
       if (name === 'sun') {
+        // Brilliant Radiant Sunburst (Bright Yellow-Gold)
         const grad = ctx.createLinearGradient(0, 0, 0, 512);
-        grad.addColorStop(0, '#ffcc00');
-        grad.addColorStop(0.5, '#ff4400');
-        grad.addColorStop(1, '#ff8800');
+        grad.addColorStop(0, '#fffbeb');
+        grad.addColorStop(0.2, '#fde047');
+        grad.addColorStop(0.5, '#f59e0b');
+        grad.addColorStop(0.8, '#d97706');
+        grad.addColorStop(1, '#b45309');
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, 1024, 512);
-        for (let i = 0; i < 400; i++) {
-          ctx.fillStyle = 'rgba(255, 255, 200, ' + (Math.random() * 0.4) + ')';
+
+        // Solar Granules & Flares
+        for (let i = 0; i < 500; i++) {
+          ctx.fillStyle = 'rgba(255, 255, 230, ' + (Math.random() * 0.45) + ')';
           ctx.beginPath();
-          ctx.arc(Math.random() * 1024, Math.random() * 512, Math.random() * 40 + 5, 0, Math.PI * 2);
+          ctx.arc(Math.random() * 1024, Math.random() * 512, Math.random() * 35 + 5, 0, Math.PI * 2);
           ctx.fill();
         }
-      } else if (name === 'earth') {
-        ctx.fillStyle = '#1e3a8a';
+      } else if (name === 'mercury') {
+        // Silvery-Gray Cratered Regolith
+        ctx.fillStyle = '#8f9499';
         ctx.fillRect(0, 0, 1024, 512);
-        ctx.fillStyle = '#15803d';
-        for (let i = 0; i < 25; i++) {
-          ctx.beginPath();
-          ctx.arc(Math.random() * 1024, Math.random() * 512, Math.random() * 100 + 40, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-        for (let i = 0; i < 50; i++) {
-          ctx.beginPath();
-          ctx.ellipse(Math.random() * 1024, Math.random() * 512, Math.random() * 120 + 30, Math.random() * 20 + 5, Math.random() * 0.5, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      } else if (name === 'jupiter') {
-        const grad = ctx.createLinearGradient(0, 0, 0, 512);
-        grad.addColorStop(0, '#78350f');
-        grad.addColorStop(0.2, '#d97706');
-        grad.addColorStop(0.4, '#fef3c7');
-        grad.addColorStop(0.6, '#b45309');
-        grad.addColorStop(0.8, '#92400e');
-        grad.addColorStop(1, '#78350f');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, 1024, 512);
-        ctx.fillStyle = '#b91c1c';
-        ctx.beginPath();
-        ctx.ellipse(600, 320, 50, 30, 0, 0, Math.PI * 2);
-        ctx.fill();
-      } else if (name === 'mars') {
-        ctx.fillStyle = '#991b1b';
-        ctx.fillRect(0, 0, 1024, 512);
-        ctx.fillStyle = '#7f1d1d';
-        for (let i = 0; i < 80; i++) {
-          ctx.beginPath();
-          ctx.arc(Math.random() * 1024, Math.random() * 512, Math.random() * 40 + 10, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, 1024, 40);
-      } else {
-        ctx.fillStyle = color;
-        ctx.fillRect(0, 0, 1024, 512);
-        for (let i = 0; i < 200; i++) {
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+        for (let i = 0; i < 350; i++) {
+          ctx.fillStyle = 'rgba(40, 45, 50, 0.4)';
           ctx.beginPath();
           ctx.arc(Math.random() * 1024, Math.random() * 512, Math.random() * 20 + 2, 0, Math.PI * 2);
           ctx.fill();
         }
+      } else if (name === 'venus') {
+        // Golden-Cream Dense Cloud Atmosphere
+        const grad = ctx.createLinearGradient(0, 0, 0, 512);
+        grad.addColorStop(0, '#fef08a');
+        grad.addColorStop(0.5, '#eab308');
+        grad.addColorStop(1, '#ca8a04');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 1024, 512);
+        for (let i = 0; i < 60; i++) {
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+          ctx.beginPath();
+          ctx.ellipse(Math.random() * 1024, Math.random() * 512, Math.random() * 160 + 50, Math.random() * 25 + 5, 0.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (name === 'earth') {
+        // Vibrant Blue Ocean & Green Continents
+        ctx.fillStyle = '#1d4ed8';
+        ctx.fillRect(0, 0, 1024, 512);
+        ctx.fillStyle = '#16a34a';
+        for (let i = 0; i < 30; i++) {
+          ctx.beginPath();
+          ctx.arc(Math.random() * 1024, Math.random() * 512, Math.random() * 110 + 40, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+        for (let i = 0; i < 60; i++) {
+          ctx.beginPath();
+          ctx.ellipse(Math.random() * 1024, Math.random() * 512, Math.random() * 130 + 30, Math.random() * 20 + 5, Math.random() * 0.4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (name === 'moon') {
+        // Lunar Gray with Dark Basaltic Maria
+        ctx.fillStyle = '#b8b8b8';
+        ctx.fillRect(0, 0, 1024, 512);
+        ctx.fillStyle = 'rgba(45, 45, 50, 0.65)';
+        for (let i = 0; i < 15; i++) {
+          ctx.beginPath();
+          ctx.arc(Math.random() * 1024, Math.random() * 512, Math.random() * 90 + 30, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (name === 'mars') {
+        // Rusty Crimson-Ochre Red Planet
+        ctx.fillStyle = '#b91c1c';
+        ctx.fillRect(0, 0, 1024, 512);
+        ctx.fillStyle = '#7f1d1d';
+        for (let i = 0; i < 90; i++) {
+          ctx.beginPath();
+          ctx.arc(Math.random() * 1024, Math.random() * 512, Math.random() * 45 + 10, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // Polar Ice Cap
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, 1024, 35);
+      } else if (name === 'jupiter') {
+        // Butterscotch & Terracotta Gas Bands with Great Red Spot
+        const grad = ctx.createLinearGradient(0, 0, 0, 512);
+        grad.addColorStop(0, '#78350f');
+        grad.addColorStop(0.2, '#d97706');
+        grad.addColorStop(0.35, '#fde68a');
+        grad.addColorStop(0.5, '#b45309');
+        grad.addColorStop(0.7, '#fef3c7');
+        grad.addColorStop(0.85, '#92400e');
+        grad.addColorStop(1, '#78350f');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 1024, 512);
+        // Great Red Spot
+        ctx.fillStyle = '#dc2626';
+        ctx.beginPath();
+        ctx.ellipse(620, 310, 55, 32, 0, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (name === 'saturn') {
+        // Golden Gas Bands
+        const grad = ctx.createLinearGradient(0, 0, 0, 512);
+        grad.addColorStop(0, '#ca8a04');
+        grad.addColorStop(0.3, '#fef08a');
+        grad.addColorStop(0.6, '#eab308');
+        grad.addColorStop(1, '#a16207');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 1024, 512);
+      } else {
+        // Uranus / Neptune (Aquamarine / Azure Blue)
+        const grad = ctx.createLinearGradient(0, 0, 0, 512);
+        grad.addColorStop(0, '#0284c7');
+        grad.addColorStop(0.5, '#38bdf8');
+        grad.addColorStop(1, '#0369a1');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 1024, 512);
       }
 
       return new THREE.CanvasTexture(canvas);
