@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Universe — See the shape of the noise</title>
   <meta name="description" content="Think a number in your mind from 1 to 249 with your question, then enter the universe.">
   
@@ -18,17 +18,40 @@
       --fg: #ffffff;
     }
 
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      height: 100dvh;
+      width: 100%;
+      overflow: hidden;
+      background-color: #000000;
+      touch-action: manipulation;
+    }
+
     .font-serif-instrument {
       font-family: 'Instrument Serif', serif;
     }
 
+    /* Hardware Accelerated Video Background */
+    #hero-video {
+      transform: translate3d(0, 0, 0);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      will-change: transform;
+    }
+
     .liquid-glass {
-      background: rgba(0, 0, 0, 0.10);
+      background: rgba(0, 0, 0, 0.25);
       background-blend-mode: luminosity;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       border: none;
-      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.15);
       position: relative;
       overflow: hidden;
     }
@@ -41,12 +64,12 @@
       padding: 1.4px;
       background: linear-gradient(
         180deg,
-        rgba(255, 255, 255, 0.45) 0%,
-        rgba(255, 255, 255, 0.15) 20%,
+        rgba(255, 255, 255, 0.5) 0%,
+        rgba(255, 255, 255, 0.18) 20%,
         rgba(255, 255, 255, 0) 40%,
         rgba(255, 255, 255, 0) 60%,
-        rgba(255, 255, 255, 0.15) 80%,
-        rgba(255, 255, 255, 0.45) 100%
+        rgba(255, 255, 255, 0.18) 80%,
+        rgba(255, 255, 255, 0.5) 100%
       );
       -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
       -webkit-mask-composite: xor;
@@ -59,7 +82,7 @@
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       border: none;
-      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.12);
       position: relative;
       overflow: hidden;
     }
@@ -84,143 +107,147 @@
       pointer-events: none;
     }
 
-    /* Modal Animation */
     .glass-modal-backdrop {
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
     }
   </style>
 </head>
-<body class="bg-black">
-  <div class="bg-black text-white min-h-screen selection:bg-white selection:text-black overflow-hidden">
-    <section class="min-h-screen relative overflow-hidden flex flex-col justify-between">
-      <!-- Background Video -->
-      <video id="hero-video" class="absolute inset-0 w-full h-full object-cover object-bottom"
-             muted autoplay loop playsinline preload="auto"></video>
+<body class="bg-black text-white selection:bg-white selection:text-black">
+  <div class="h-[100dvh] max-h-[100dvh] w-full flex flex-col justify-between overflow-hidden relative select-none">
+    <!-- 4K / Full HD Background Video -->
+    <video id="hero-video" class="absolute inset-0 w-full h-full object-cover object-bottom pointer-events-none"
+           muted autoplay loop playsinline preload="auto"></video>
 
-      <!-- Navbar -->
-      <nav class="relative z-20 px-6 py-6">
-        <div class="liquid-glass rounded-full max-w-5xl mx-auto pl-6 pr-1.5 py-1.5 flex items-center justify-between">
-          <!-- Left Group -->
-          <div class="flex items-center gap-2">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="w-6 h-6">
-              <path d="M4.21 16.5 A9 9 0 0 1 16.5 4.21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <path d="M16.5 4.21 A9 9 0 0 1 19.79 16.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="2.4 2.3"/>
-              <path d="M19.79 16.5 A9 9 0 0 1 4.21 16.5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="0.01 4.7"/>
-              <circle cx="12" cy="12" r="2.5" fill="currentColor"/>
-            </svg>
-            <span class="font-semibold text-lg tracking-tight">Universe</span>
-            <div class="hidden md:flex gap-8 ml-8">
-              <a href="#oracle" class="text-white/80 hover:text-white text-sm font-medium transition-colors">Oracle</a>
-              <a href="#horary" class="text-white/80 hover:text-white text-sm font-medium transition-colors">Horary 249</a>
-              <a href="#insights" class="text-white/80 hover:text-white text-sm font-medium transition-colors">Insights</a>
-            </div>
-          </div>
-
-          <!-- Right Group -->
-          <div class="flex items-center gap-4">
-            <button class="text-white text-sm font-medium">Explore</button>
-            <button onclick="document.getElementById('user-name').focus()" class="bg-white rounded-full px-5 py-2 text-black text-sm font-medium whitespace-nowrap hover:scale-105 transition-transform">Enter Universe</button>
+    <!-- Top Navbar -->
+    <header class="relative z-20 px-3 sm:px-6 pt-2 sm:pt-4 md:pt-6 shrink-0">
+      <div class="liquid-glass rounded-full max-w-5xl mx-auto pl-3.5 pr-1.5 py-1 sm:pl-5 sm:pr-2 sm:py-1.5 md:pl-6 md:pr-2 md:py-2 flex items-center justify-between">
+        <!-- Left Group -->
+        <div class="flex items-center gap-1.5 sm:gap-2">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 shrink-0">
+            <path d="M4.21 16.5 A9 9 0 0 1 16.5 4.21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M16.5 4.21 A9 9 0 0 1 19.79 16.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="2.4 2.3"/>
+            <path d="M19.79 16.5 A9 9 0 0 1 4.21 16.5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="0.01 4.7"/>
+            <circle cx="12" cy="12" r="2.5" fill="currentColor"/>
+          </svg>
+          <span class="font-semibold text-sm sm:text-base md:text-lg tracking-tight">Universe</span>
+          <div class="hidden md:flex gap-6 lg:gap-8 ml-6">
+            <a href="#oracle" class="text-white/80 hover:text-white text-xs md:text-sm font-medium transition-colors">Oracle</a>
+            <a href="#horary" class="text-white/80 hover:text-white text-xs md:text-sm font-medium transition-colors">Horary 249</a>
+            <a href="#insights" class="text-white/80 hover:text-white text-xs md:text-sm font-medium transition-colors">Insights</a>
           </div>
         </div>
-      </nav>
 
-      <!-- Hero Content -->
-      <div class="relative z-10 flex-1 flex flex-col items-center justify-center px-6 py-12 text-center -translate-y-[15%]">
-        <h1 class="text-6xl md:text-7xl lg:text-8xl font-serif-instrument tracking-tight whitespace-nowrap mb-4"
-            style="text-shadow: 0 0 72px rgba(0, 0, 0, 0.42), 0 4px 28px rgba(0, 0, 0, 0.28);">
-          See the shape of the <em class="italic">universe</em>
-        </h1>
-        <p class="text-white/70 text-sm leading-relaxed max-w-2xl md:whitespace-nowrap mb-10"
-           style="text-shadow: 0 0 30px rgba(0, 0, 0, 0.32), 0 1px 10px rgba(0, 0, 0, 0.20);">
-          Think a number in your mind (1 to 249) with your question, then enter the universe.
-        </p>
-
-        <!-- Universe Form -->
-        <div class="max-w-2xl w-full">
-          <form id="universe-form" class="liquid-glass rounded-3xl md:rounded-full p-2 md:p-1.5 flex flex-col md:flex-row items-center gap-2 md:gap-3 w-full">
-            <!-- Name Input -->
-            <div class="flex-1 w-full flex items-center pl-4 pr-2 py-1.5">
-              <input type="text" id="user-name" required placeholder="Your Name"
-                     class="bg-transparent border-none outline-none w-full text-white placeholder:text-white/90 text-sm">
-            </div>
-            
-            <div class="hidden md:block w-px h-6 bg-white/20"></div>
-
-            <!-- Question Input -->
-            <div class="flex-[1.4] w-full flex items-center px-4 md:px-2 py-1.5">
-              <input type="text" id="user-question" required placeholder="Your Question..."
-                     class="bg-transparent border-none outline-none w-full text-white placeholder:text-white/90 text-sm">
-            </div>
-
-            <div class="hidden md:block w-px h-6 bg-white/20"></div>
-
-            <!-- Number Input (1 to 249) -->
-            <div class="w-full md:w-32 flex items-center px-4 md:px-2 py-1.5">
-              <input type="number" id="user-number" required min="1" max="249" placeholder="No. (1–249)"
-                     class="bg-transparent border-none outline-none w-full text-white placeholder:text-white/90 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
-            </div>
-
-            <!-- Submit Button -->
-            <button type="submit"
-                    class="bg-white rounded-full px-6 py-3 text-black text-sm font-medium whitespace-nowrap hover:scale-105 transition-transform duration-300 w-full md:w-auto">
-              Enter to Universe
-            </button>
-          </form>
+        <!-- Right Group -->
+        <div class="flex items-center gap-2 md:gap-4">
+          <div class="hidden sm:flex items-center gap-1.5 text-white/60 text-[11px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/5 border border-white/10">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> 4K Ultra HD
+          </div>
+          <button onclick="document.getElementById('user-name').focus()" class="bg-white rounded-full px-3 py-1 sm:px-4 sm:py-1.5 md:px-5 md:py-2 text-black text-xs md:text-sm font-semibold whitespace-nowrap hover:scale-105 active:scale-95 transition-transform">
+            Enter Universe
+          </button>
         </div>
       </div>
+    </header>
 
-      <!-- Social Row -->
-      <div class="relative z-10 flex justify-center gap-4 pb-12">
-        <button class="liquid-glass-circle w-14 h-14 flex items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/5 transition-all" aria-label="Instagram">
-          <iconify-icon icon="lucide:instagram" class="text-xl"></iconify-icon>
-        </button>
-        <button class="liquid-glass-circle w-14 h-14 flex items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/5 transition-all" aria-label="Twitter">
-          <iconify-icon icon="lucide:twitter" class="text-xl"></iconify-icon>
-        </button>
-        <button class="liquid-glass-circle w-14 h-14 flex items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/5 transition-all" aria-label="Website">
-          <iconify-icon icon="lucide:globe" class="text-xl"></iconify-icon>
-        </button>
+    <!-- Center Hero Content -->
+    <main class="relative z-10 flex-1 flex flex-col items-center justify-center px-3 sm:px-6 py-1 sm:py-2 text-center my-auto w-full max-w-4xl mx-auto shrink min-h-0">
+      <!-- Headline (Responsive & non-clipping on all screens) -->
+      <h1 class="text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-serif-instrument tracking-tight leading-[1.1] md:whitespace-nowrap mb-1.5 sm:mb-2.5 md:mb-3 px-1"
+          style="text-shadow: 0 0 48px rgba(0, 0, 0, 0.7), 0 4px 20px rgba(0, 0, 0, 0.5);">
+        See the shape of the <em class="italic">universe</em>
+      </h1>
+      
+      <!-- Subline -->
+      <p class="text-white/75 text-xs sm:text-sm md:text-base leading-relaxed max-w-xl md:whitespace-nowrap mb-2.5 sm:mb-4 md:mb-6 px-2"
+         style="text-shadow: 0 0 24px rgba(0, 0, 0, 0.6), 0 1px 8px rgba(0, 0, 0, 0.4);">
+        Think a number in your mind (1 to 249) with your question, then enter the universe.
+      </p>
+
+      <!-- Universe Form (Ultra compact on mobile to guarantee full screen visibility) -->
+      <div class="w-full max-w-2xl px-1 sm:px-2">
+        <form id="universe-form" class="liquid-glass rounded-2xl md:rounded-full p-1.5 md:p-1.5 flex flex-col md:flex-row items-center gap-1.5 md:gap-3 w-full">
+          <!-- Name Input -->
+          <div class="w-full md:flex-1 flex items-center px-3 py-1 md:py-1 rounded-xl md:rounded-none bg-white/[0.06] md:bg-transparent">
+            <input type="text" id="user-name" required placeholder="Your Name"
+                   class="bg-transparent border-none outline-none w-full text-white placeholder:text-white/70 text-xs sm:text-sm">
+          </div>
+          
+          <div class="hidden md:block w-px h-6 bg-white/20"></div>
+
+          <!-- Question Input -->
+          <div class="w-full md:flex-[1.4] flex items-center px-3 py-1 md:py-1 rounded-xl md:rounded-none bg-white/[0.06] md:bg-transparent">
+            <input type="text" id="user-question" required placeholder="Your Question..."
+                   class="bg-transparent border-none outline-none w-full text-white placeholder:text-white/70 text-xs sm:text-sm">
+          </div>
+
+          <div class="hidden md:block w-px h-6 bg-white/20"></div>
+
+          <!-- Number Input (1 to 249) -->
+          <div class="w-full md:w-28 flex items-center px-3 py-1 md:py-1 rounded-xl md:rounded-none bg-white/[0.06] md:bg-transparent">
+            <input type="number" id="user-number" required min="1" max="249" placeholder="No. (1–249)"
+                   class="bg-transparent border-none outline-none w-full text-white placeholder:text-white/70 text-xs sm:text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit"
+                  class="bg-white rounded-full px-4 py-2 sm:px-5 sm:py-2.5 md:px-6 md:py-3 text-black text-xs sm:text-sm font-semibold whitespace-nowrap hover:scale-105 active:scale-95 transition-transform duration-200 w-full md:w-auto shadow-md">
+            Enter to Universe
+          </button>
+        </form>
       </div>
-    </section>
+    </main>
+
+    <!-- Bottom Social Row (Always fully visible on mobile) -->
+    <footer class="relative z-10 flex justify-center gap-2.5 sm:gap-3 md:gap-4 pb-2 sm:pb-3 md:pb-6 pt-1 shrink-0">
+      <button class="liquid-glass-circle w-9 h-9 sm:w-11 sm:h-11 md:w-14 md:h-14 flex items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/5 transition-all" aria-label="Instagram">
+        <iconify-icon icon="lucide:instagram" class="text-sm sm:text-base md:text-xl"></iconify-icon>
+      </button>
+      <button class="liquid-glass-circle w-9 h-9 sm:w-11 sm:h-11 md:w-14 md:h-14 flex items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/5 transition-all" aria-label="Twitter">
+        <iconify-icon icon="lucide:twitter" class="text-sm sm:text-base md:text-xl"></iconify-icon>
+      </button>
+      <button class="liquid-glass-circle w-9 h-9 sm:w-11 sm:h-11 md:w-14 md:h-14 flex items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/5 transition-all" aria-label="Website">
+        <iconify-icon icon="lucide:globe" class="text-sm sm:text-base md:text-xl"></iconify-icon>
+      </button>
+    </footer>
   </div>
 
   <!-- Universe Oracle Result Modal -->
-  <div id="oracle-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 glass-modal-backdrop hidden opacity-0 transition-opacity duration-300">
-    <div class="liquid-glass rounded-3xl max-w-lg w-full p-8 text-center relative border border-white/20 shadow-2xl">
+  <div id="oracle-modal" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 glass-modal-backdrop hidden opacity-0 transition-opacity duration-300">
+    <div class="liquid-glass rounded-3xl max-w-md w-full p-4 sm:p-6 md:p-7 text-center relative border border-white/20 shadow-2xl max-h-[90dvh] overflow-y-auto">
       <!-- Top Badge -->
-      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white/80 text-xs tracking-wider uppercase mb-4">
+      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-white/80 text-[10px] sm:text-[11px] tracking-wider uppercase mb-2 sm:mb-3">
         <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
         Cosmic Alignment • KP Horary 1–249
       </div>
 
-      <h2 id="modal-name-title" class="text-3xl md:text-4xl font-serif-instrument text-white mb-1"></h2>
-      <p id="modal-question-text" class="text-white/60 text-sm italic mb-6"></p>
+      <h2 id="modal-name-title" class="text-2xl sm:text-3xl md:text-4xl font-serif-instrument text-white mb-0.5 sm:mb-1"></h2>
+      <p id="modal-question-text" class="text-white/60 text-xs sm:text-sm italic mb-3 sm:mb-4"></p>
 
-      <div class="grid grid-cols-3 gap-3 mb-6">
-        <div class="p-3 rounded-2xl bg-white/5 border border-white/10">
-          <div class="text-[11px] text-white/50 uppercase tracking-wide">Seed Number</div>
-          <div id="modal-seed-num" class="text-xl font-bold text-white mt-1"></div>
+      <div class="grid grid-cols-3 gap-2 sm:gap-3 mb-3 sm:mb-4">
+        <div class="p-2 sm:p-2.5 rounded-2xl bg-white/5 border border-white/10">
+          <div class="text-[9px] sm:text-[10px] text-white/50 uppercase tracking-wide">Seed Number</div>
+          <div id="modal-seed-num" class="text-sm sm:text-base md:text-lg font-bold text-white mt-0.5"></div>
         </div>
-        <div class="p-3 rounded-2xl bg-white/5 border border-white/10">
-          <div class="text-[11px] text-white/50 uppercase tracking-wide">Zodiac Sign</div>
-          <div id="modal-sign" class="text-sm font-semibold text-white mt-1"></div>
+        <div class="p-2 sm:p-2.5 rounded-2xl bg-white/5 border border-white/10">
+          <div class="text-[9px] sm:text-[10px] text-white/50 uppercase tracking-wide">Zodiac Sign</div>
+          <div id="modal-sign" class="text-xs sm:text-sm font-semibold text-white mt-0.5"></div>
         </div>
-        <div class="p-3 rounded-2xl bg-white/5 border border-white/10">
-          <div class="text-[11px] text-white/50 uppercase tracking-wide">Sub-Lord</div>
-          <div id="modal-sublord" class="text-sm font-semibold text-white mt-1"></div>
+        <div class="p-2 sm:p-2.5 rounded-2xl bg-white/5 border border-white/10">
+          <div class="text-[9px] sm:text-[10px] text-white/50 uppercase tracking-wide">Sub-Lord</div>
+          <div id="modal-sublord" class="text-xs sm:text-sm font-semibold text-white mt-0.5"></div>
         </div>
       </div>
 
-      <div class="p-4 rounded-2xl bg-white/5 border border-white/10 text-left mb-6">
-        <div class="text-xs font-semibold text-white/80 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-          <iconify-icon icon="lucide:sparkles" class="text-sm"></iconify-icon> Universe Oracle Verdict
+      <div class="p-3 sm:p-4 rounded-2xl bg-white/5 border border-white/10 text-left mb-3 sm:mb-4">
+        <div class="text-[11px] sm:text-xs font-semibold text-white/80 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+          <iconify-icon icon="lucide:sparkles" class="text-sm text-emerald-400"></iconify-icon> Universe Oracle Verdict
         </div>
-        <p id="modal-verdict" class="text-sm text-white/80 leading-relaxed"></p>
+        <p id="modal-verdict" class="text-xs sm:text-sm text-white/80 leading-relaxed"></p>
       </div>
 
-      <div class="flex items-center justify-center gap-3">
-        <button onclick="closeModal()" class="bg-white rounded-full px-6 py-2.5 text-black text-sm font-medium hover:scale-105 transition-transform duration-300">
+      <div class="flex items-center justify-center">
+        <button onclick="closeModal()" class="bg-white rounded-full px-5 py-2 sm:px-6 sm:py-2.5 text-black text-xs sm:text-sm font-semibold hover:scale-105 active:scale-95 transition-transform duration-200 shadow-md">
           Ask Another Question
         </button>
       </div>
@@ -228,7 +255,7 @@
   </div>
 
   <script>
-    // Video Setup
+    // High Definition 4K / Full HD Background Video Setup
     const video = document.getElementById('hero-video');
     video.src = "https://designerstephen.github.io/public-assets/videos/observe-hero.mp4";
     video.playbackRate = 0.5;
@@ -283,7 +310,7 @@
       document.getElementById('modal-question-text').textContent = `"${question}"`;
       document.getElementById('modal-seed-num').textContent = `#${num}`;
       document.getElementById('modal-sign').textContent = matchedSign.name.split(' ')[0];
-      document.getElementById('modal-sublord').textContent = `${subLord} (Sign: ${matchedSign.ruler})`;
+      document.getElementById('modal-sublord').textContent = `${subLord} (${matchedSign.ruler})`;
       document.getElementById('modal-verdict').textContent = verdict;
 
       // Show Modal
