@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Universe — See the shape of the noise</title>
-  <meta name="description" content="Enter the Universe to observe the Moon and explore its cosmic details.">
+  <meta name="description" content="Enter the Universe to explore an ultra-realistic 3D Moon and space simulation.">
   
-  <!-- Tailwind CSS, Three.js for realistic Moon, & Iconify -->
+  <!-- Tailwind CSS, Three.js, & Iconify -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -31,7 +31,9 @@
       width: 100%;
       overflow: hidden;
       background-color: #000000;
-      touch-action: manipulation;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
     }
 
     .font-serif-instrument {
@@ -113,478 +115,560 @@
     .view-hidden {
       opacity: 0;
       pointer-events: none;
-      transform: scale(0.95);
-      transition: opacity 0.8s ease, transform 0.8s ease;
+      transform: scale(0.96) translateY(-10px);
+      transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1), transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .view-visible {
       opacity: 1;
       pointer-events: auto;
-      transform: scale(1);
-      transition: opacity 0.8s ease, transform 0.8s ease;
+      transform: scale(1) translateY(0);
+      transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1), transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* Custom scrollbar for moon details on small screens */
-    .moon-scroll::-webkit-scrollbar {
-      width: 4px;
+    #space-canvas {
+      touch-action: none;
+      cursor: grab;
     }
-    .moon-scroll::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 4px;
+    #space-canvas:active {
+      cursor: grabbing;
     }
   </style>
 </head>
 <body class="bg-black text-white selection:bg-white selection:text-black font-sans">
-  <div class="h-[100dvh] max-h-[100dvh] w-full flex flex-col justify-between overflow-hidden relative select-none">
+  <div class="h-[100dvh] max-h-[100dvh] w-full flex flex-col justify-between overflow-hidden relative">
     
-    <!-- Background Video (Boy standing looking at the sky) -->
-    <video id="hero-video" class="absolute inset-0 w-full h-full object-cover object-bottom pointer-events-none"
+    <!-- 1. Background Video (Boy standing looking up at the sky) -->
+    <video id="hero-video" class="absolute inset-0 w-full h-full object-cover object-bottom pointer-events-none z-0"
            muted autoplay loop playsinline preload="auto"></video>
 
-    <!-- 3D Realistic Moon Canvas Container (Renders realistic Moon on Enter Universe) -->
-    <div id="moon-canvas-container" class="absolute inset-0 w-full h-full pointer-events-none opacity-0 transition-opacity duration-1000 z-[5]"></div>
+    <!-- 2. Interactive 3D Space Canvas (Planets & Ultra-Realistic Moon) -->
+    <canvas id="space-canvas" class="absolute inset-0 w-full h-full z-10 pointer-events-none opacity-0 transition-opacity duration-1000"></canvas>
 
     <!-- Top Navbar -->
-    <header class="relative z-20 px-3 sm:px-6 pt-2 sm:pt-4 md:pt-6 shrink-0">
-      <div class="liquid-glass rounded-full max-w-5xl mx-auto pl-3.5 pr-1.5 py-1 sm:pl-5 sm:pr-2 sm:py-1.5 md:pl-6 md:pr-2 md:py-2 flex items-center justify-between">
+    <header class="relative z-30 px-3 sm:px-6 pt-3 sm:pt-4 md:pt-6 shrink-0">
+      <div class="liquid-glass rounded-full max-w-5xl mx-auto pl-4 pr-2 py-1.5 md:pl-6 md:pr-2.5 md:py-2 flex items-center justify-between">
         <!-- Left Group -->
-        <div class="flex items-center gap-1.5 sm:gap-2">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 shrink-0">
+        <div class="flex items-center gap-2">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="w-5 h-5 md:w-6 md:h-6 shrink-0">
             <path d="M4.21 16.5 A9 9 0 0 1 16.5 4.21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
             <path d="M16.5 4.21 A9 9 0 0 1 19.79 16.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="2.4 2.3"/>
             <path d="M19.79 16.5 A9 9 0 0 1 4.21 16.5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="0.01 4.7"/>
             <circle cx="12" cy="12" r="2.5" fill="currentColor"/>
           </svg>
-          <span class="font-semibold text-sm sm:text-base md:text-lg tracking-tight">Universe</span>
-          <div class="hidden md:flex gap-6 lg:gap-8 ml-6">
-            <a href="#moon" onclick="enterUniverse(event)" class="text-white/80 hover:text-white text-xs md:text-sm font-medium transition-colors">Moon Planet</a>
-            <a href="#orbit" onclick="enterUniverse(event)" class="text-white/80 hover:text-white text-xs md:text-sm font-medium transition-colors">Orbit & Physics</a>
-            <a href="#cosmos" onclick="enterUniverse(event)" class="text-white/80 hover:text-white text-xs md:text-sm font-medium transition-colors">Cosmic Mind</a>
-          </div>
+          <span class="font-semibold text-base md:text-lg tracking-tight">Universe</span>
         </div>
 
         <!-- Right Group -->
-        <div class="flex items-center gap-2 md:gap-4">
-          <div class="hidden sm:flex items-center gap-1.5 text-white/60 text-[11px] uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> 4K Ultra HD
+        <div class="flex items-center gap-3">
+          <!-- Space Mode Indicator (visible when in space) -->
+          <div id="space-hint" class="hidden items-center gap-2 text-[11px] sm:text-xs text-white/80 px-3 py-1 rounded-full bg-white/10 border border-white/15">
+            <iconify-icon icon="lucide:hand" class="text-sm animate-pulse"></iconify-icon>
+            <span>Touch & Drag to Rotate</span>
           </div>
-          <button id="nav-action-btn" onclick="toggleUniverseMode()" class="bg-white rounded-full px-3 py-1 sm:px-4 sm:py-1.5 md:px-5 md:py-2 text-black text-xs md:text-sm font-semibold whitespace-nowrap hover:scale-105 active:scale-95 transition-transform">
+
+          <button id="main-action-btn" onclick="toggleUniverseMode()" class="bg-white rounded-full px-4 py-1.5 md:px-5 md:py-2 text-black text-xs md:text-sm font-semibold whitespace-nowrap hover:scale-105 active:scale-95 transition-transform shadow-lg">
             Enter Universe
           </button>
         </div>
       </div>
     </header>
 
-    <!-- VIEW 1: HERO VIEW (Boy looking up with Enter Universe button) -->
-    <main id="hero-view" class="relative z-10 flex-1 flex flex-col items-center justify-center px-3 sm:px-6 py-2 text-center my-auto w-full max-w-4xl mx-auto shrink min-h-0 view-visible">
-      <h1 class="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-serif-instrument tracking-tight leading-[1.1] md:whitespace-nowrap mb-2 sm:mb-3 md:mb-4 px-1"
-          style="text-shadow: 0 0 54px rgba(0, 0, 0, 0.75), 0 4px 24px rgba(0, 0, 0, 0.6);">
+    <!-- Center Hero View (Landing with Boy) -->
+    <main id="hero-view" class="relative z-30 flex-1 flex flex-col items-center justify-center px-4 sm:px-6 py-2 text-center my-auto w-full max-w-4xl mx-auto shrink min-h-0 view-visible">
+      <h1 class="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-serif-instrument tracking-tight leading-[1.1] md:whitespace-nowrap mb-3 md:mb-4 px-1"
+          style="text-shadow: 0 0 54px rgba(0, 0, 0, 0.8), 0 4px 24px rgba(0, 0, 0, 0.6);">
         See the shape of the <em class="italic">universe</em>
       </h1>
       
-      <p class="text-white/80 text-xs sm:text-sm md:text-base leading-relaxed max-w-xl md:whitespace-nowrap mb-6 sm:mb-8 md:mb-10 px-3"
+      <p class="text-white/80 text-xs sm:text-sm md:text-base leading-relaxed max-w-xl md:whitespace-nowrap mb-8 md:mb-10 px-3"
          style="text-shadow: 0 0 28px rgba(0, 0, 0, 0.7), 0 1px 10px rgba(0, 0, 0, 0.5);">
-        Gaze upward into the cosmic expanse to observe the Moon and reveal its celestial secrets.
+        Gaze upward to travel through the solar system and observe the Moon in realistic detail.
       </p>
 
-      <!-- Centered Enter Universe Action Pill -->
-      <div class="max-w-md w-full px-2">
-        <div class="liquid-glass rounded-full p-2 pl-6 pr-2 flex items-center justify-between gap-4 shadow-2xl">
-          <div class="flex items-center gap-2 text-left">
+      <!-- Action Button Pill -->
+      <div class="max-w-xs sm:max-w-sm w-full px-2">
+        <button onclick="enterUniverse()"
+                class="w-full liquid-glass rounded-full p-2 pl-6 pr-2.5 flex items-center justify-between gap-3 shadow-2xl hover:scale-105 active:scale-95 transition-all group">
+          <div class="flex items-center gap-2.5 text-left">
             <span class="w-2 h-2 rounded-full bg-white animate-ping"></span>
-            <span class="text-xs sm:text-sm text-white/90 font-medium">Observe Lunar Orbit</span>
+            <span class="text-xs sm:text-sm text-white font-medium">Enter Universe</span>
           </div>
-          <button onclick="enterUniverse(event)"
-                  class="bg-white rounded-full px-6 py-3 text-black text-xs sm:text-sm font-semibold whitespace-nowrap hover:scale-105 active:scale-95 transition-transform duration-200 shadow-xl flex items-center gap-2">
-            <span>Enter to Universe</span>
+          <div class="bg-white rounded-full p-2.5 text-black flex items-center justify-center group-hover:translate-x-0.5 transition-transform">
             <iconify-icon icon="lucide:arrow-up-right" class="text-base"></iconify-icon>
-          </button>
-        </div>
+          </div>
+        </button>
       </div>
     </main>
 
-    <!-- VIEW 2: MOON PLANET DETAILS & CINEMATIC HUD VIEW -->
-    <section id="moon-view" class="relative z-10 flex-1 flex flex-col justify-between px-3 sm:px-6 py-2 w-full max-w-6xl mx-auto shrink min-h-0 view-hidden hidden">
-      <!-- Top Title Bar -->
-      <div class="flex items-center justify-between pt-1">
-        <div>
-          <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-white/90 text-[10px] sm:text-xs tracking-widest uppercase mb-1">
-            <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
-            Celestial Target • The Moon (Luna / Chandra)
-          </div>
-          <h2 class="text-2xl sm:text-4xl md:text-5xl font-serif-instrument text-white tracking-tight"
-              style="text-shadow: 0 0 40px rgba(0,0,0,0.8);">
-            Earth's Sole Natural Satellite
-          </h2>
-        </div>
-        <button onclick="exitUniverse()" class="liquid-glass rounded-full px-4 py-1.5 text-xs sm:text-sm font-medium text-white/90 hover:text-white flex items-center gap-1.5 transition-all hover:bg-white/10">
-          <iconify-icon icon="lucide:arrow-left" class="text-sm"></iconify-icon>
-          <span class="hidden sm:inline">Back to Earth</span>
-        </button>
-      </div>
-
-      <!-- Moon Details Cards Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-3 auto-rows-max md:auto-rows-fr gap-2.5 sm:gap-4 my-auto moon-scroll max-h-[68dvh] overflow-y-auto py-1 pr-1">
-        
-        <!-- Card 1: Physical & Orbital Telemetry -->
-        <div class="liquid-glass rounded-3xl p-4 sm:p-5 flex flex-col justify-between border border-white/15">
-          <div>
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-xs uppercase tracking-widest text-white/60 font-semibold flex items-center gap-1.5">
-                <iconify-icon icon="lucide:orbit" class="text-sm text-white"></iconify-icon> Orbital & Physical Specs
-              </span>
-              <span class="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/80">Telemetry</span>
-            </div>
-            
-            <div class="space-y-2 text-xs sm:text-sm">
-              <div class="flex justify-between py-1 border-b border-white/10">
-                <span class="text-white/60">Mean Distance:</span>
-                <span class="font-medium text-white">384,400 km</span>
-              </div>
-              <div class="flex justify-between py-1 border-b border-white/10">
-                <span class="text-white/60">Equatorial Radius:</span>
-                <span class="font-medium text-white">1,737.4 km (0.272 Earth)</span>
-              </div>
-              <div class="flex justify-between py-1 border-b border-white/10">
-                <span class="text-white/60">Orbital Period:</span>
-                <span class="font-medium text-white">27.32 days (Synchronous)</span>
-              </div>
-              <div class="flex justify-between py-1 border-b border-white/10">
-                <span class="text-white/60">Surface Gravity:</span>
-                <span class="font-medium text-white">1.62 m/s² (0.166 g)</span>
-              </div>
-              <div class="flex justify-between py-1">
-                <span class="text-white/60">Surface Temp:</span>
-                <span class="font-medium text-white">-130°C to +120°C</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Card 2: Lunar Surface & Key Features -->
-        <div class="liquid-glass rounded-3xl p-4 sm:p-5 flex flex-col justify-between border border-white/15">
-          <div>
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-xs uppercase tracking-widest text-white/60 font-semibold flex items-center gap-1.5">
-                <iconify-icon icon="lucide:map-pin" class="text-sm text-white"></iconify-icon> Lunar Surface & Maria
-              </span>
-              <span class="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/80">Terrain</span>
-            </div>
-            
-            <p class="text-xs sm:text-sm text-white/80 leading-relaxed mb-3">
-              Characterized by dark basaltic plains (<em class="italic">maria</em>) and ancient cratered highlands formed by colossal meteorite impacts over 4.5 billion years.
-            </p>
-
-            <div class="grid grid-cols-2 gap-2 text-[11px] sm:text-xs">
-              <div class="p-2 rounded-xl bg-white/5 border border-white/10">
-                <div class="text-white/50 text-[9px] uppercase">Major Sea</div>
-                <div class="font-semibold text-white">Sea of Tranquility</div>
-              </div>
-              <div class="p-2 rounded-xl bg-white/5 border border-white/10">
-                <div class="text-white/50 text-[9px] uppercase">Rayed Crater</div>
-                <div class="font-semibold text-white">Tycho (85 km dia)</div>
-              </div>
-              <div class="p-2 rounded-xl bg-white/5 border border-white/10">
-                <div class="text-white/50 text-[9px] uppercase">Deep Basin</div>
-                <div class="font-semibold text-white">South Pole-Aitken</div>
-              </div>
-              <div class="p-2 rounded-xl bg-white/5 border border-white/10">
-                <div class="text-white/50 text-[9px] uppercase">Volcanic Dome</div>
-                <div class="font-semibold text-white">Mons Rümker</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Card 3: Astrological & Cosmic Significance -->
-        <div class="liquid-glass rounded-3xl p-4 sm:p-5 flex flex-col justify-between border border-white/15">
-          <div>
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-xs uppercase tracking-widest text-white/60 font-semibold flex items-center gap-1.5">
-                <iconify-icon icon="lucide:sparkles" class="text-sm text-white"></iconify-icon> Cosmic Astrological Identity
-              </span>
-              <span class="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/80">Vedic / KP</span>
-            </div>
-
-            <div class="space-y-2 text-xs sm:text-sm">
-              <div class="flex justify-between py-1 border-b border-white/10">
-                <span class="text-white/60">Ruling Sign:</span>
-                <span class="font-medium text-white">Cancer (Karkata)</span>
-              </div>
-              <div class="flex justify-between py-1 border-b border-white/10">
-                <span class="text-white/60">Karaka (Significator):</span>
-                <span class="font-medium text-white">Mind, Emotions, Intuition</span>
-              </div>
-              <div class="flex justify-between py-1 border-b border-white/10">
-                <span class="text-white/60">Exaltation / Debilitation:</span>
-                <span class="font-medium text-white">Taurus 3° / Scorpio 3°</span>
-              </div>
-              <div class="flex justify-between py-1">
-                <span class="text-white/60">Nakshatras:</span>
-                <span class="font-medium text-white">Rohini, Hasta, Shravana</span>
-              </div>
-            </div>
-
-            <div class="mt-3 p-2.5 rounded-2xl bg-white/5 border border-white/10 text-[11px] text-white/75 leading-relaxed">
-              "The Moon governs the subconscious tides of the mind (Manas) and life's emotional rhythms."
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Bottom Status Bar -->
-      <div class="flex items-center justify-between pt-1 text-[11px] text-white/50">
-        <div class="flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-          <span>Photorealistic 3D Moon Telemetry Active</span>
-        </div>
-        <div class="flex items-center gap-3">
-          <button onclick="rotateMoonSpeed()" class="text-white/70 hover:text-white transition">Rotate Moon</button>
-          <span>•</span>
-          <button onclick="exitUniverse()" class="text-white underline hover:text-white transition">Return to Boy View</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Bottom Social Row -->
-    <footer class="relative z-10 flex justify-center gap-2.5 sm:gap-3 md:gap-4 pb-2 sm:pb-3 md:pb-6 pt-1 shrink-0">
-      <button class="liquid-glass-circle w-9 h-9 sm:w-11 sm:h-11 md:w-14 md:h-14 flex items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/5 transition-all" aria-label="Instagram">
-        <iconify-icon icon="lucide:instagram" class="text-sm sm:text-base md:text-xl"></iconify-icon>
-      </button>
-      <button class="liquid-glass-circle w-9 h-9 sm:w-11 sm:h-11 md:w-14 md:h-14 flex items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/5 transition-all" aria-label="Twitter">
-        <iconify-icon icon="lucide:twitter" class="text-sm sm:text-base md:text-xl"></iconify-icon>
-      </button>
-      <button class="liquid-glass-circle w-9 h-9 sm:w-11 sm:h-11 md:w-14 md:h-14 flex items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/5 transition-all" aria-label="Website">
-        <iconify-icon icon="lucide:globe" class="text-sm sm:text-base md:text-xl"></iconify-icon>
-      </button>
-    </footer>
+    <!-- Empty Bottom Spacer (Social icons completely removed as requested) -->
+    <div class="h-6 shrink-0 relative z-20"></div>
   </div>
 
   <script>
-    // Video Setup (Boy looking at the sky)
+    // Video Setup
     const video = document.getElementById('hero-video');
     video.src = "https://designerstephen.github.io/public-assets/videos/observe-hero.mp4";
     video.playbackRate = 0.5;
 
-    // View Navigation
-    let inMoonMode = false;
+    let inSpaceMode = false;
     const heroView = document.getElementById('hero-view');
-    const moonView = document.getElementById('moon-view');
-    const moonCanvasContainer = document.getElementById('moon-canvas-container');
-    const navActionBtn = document.getElementById('nav-action-btn');
+    const spaceCanvas = document.getElementById('space-canvas');
+    const mainActionBtn = document.getElementById('main-action-btn');
+    const spaceHint = document.getElementById('space-hint');
 
     function toggleUniverseMode() {
-      if (inMoonMode) {
+      if (inSpaceMode) {
         exitUniverse();
       } else {
         enterUniverse();
       }
     }
 
-    function enterUniverse(e) {
-      if (e) e.preventDefault();
-      inMoonMode = true;
+    function enterUniverse() {
+      inSpaceMode = true;
 
-      // Animate background video to pan/zoom upward toward the cosmos
-      video.style.transform = 'scale(1.4) translateY(-18%)';
-      video.style.opacity = '0.35';
-
-      // Switch views
+      // 1. Hide Hero view smoothly
       heroView.classList.remove('view-visible');
       heroView.classList.add('view-hidden');
 
-      setTimeout(() => {
-        heroView.classList.add('hidden');
-        moonView.classList.remove('hidden');
-        setTimeout(() => {
-          moonView.classList.remove('view-hidden');
-          moonView.classList.add('view-visible');
-        }, 30);
-      }, 500);
+      // 2. Animate background video upward & fade into pure 3D space
+      video.style.transform = 'scale(1.8) translateY(-30%)';
+      video.style.opacity = '0';
 
-      // Show 3D realistic moon
-      moonCanvasContainer.classList.remove('opacity-0');
-      moonCanvasContainer.classList.add('opacity-100');
-      navActionBtn.textContent = "Back to Earth";
+      // 3. Make 3D space canvas interactive and visible
+      spaceCanvas.classList.remove('pointer-events-none');
+      spaceCanvas.classList.add('pointer-events-auto');
+      spaceCanvas.classList.remove('opacity-0');
+      spaceCanvas.classList.add('opacity-100');
 
-      if (!moonInitialized) {
-        initMoonScene();
+      mainActionBtn.textContent = "Back to Earth";
+      spaceHint.classList.remove('hidden');
+      spaceHint.classList.add('flex');
+
+      if (!threeInitialized) {
+        initThreeSpace();
       }
+
+      // 4. Trigger cinematic fly-through camera animation into space
+      startFlyThroughAnimation();
     }
 
     function exitUniverse() {
-      inMoonMode = false;
+      inSpaceMode = false;
 
       // Reset video
       video.style.transform = 'translate3d(0, 0, 0) scale(1)';
       video.style.opacity = '1';
 
-      // Hide moon
-      moonCanvasContainer.classList.remove('opacity-100');
-      moonCanvasContainer.classList.add('opacity-0');
+      // Hide canvas
+      spaceCanvas.classList.remove('pointer-events-auto');
+      spaceCanvas.classList.add('pointer-events-none');
+      spaceCanvas.classList.remove('opacity-100');
+      spaceCanvas.classList.add('opacity-0');
 
-      // Switch views
-      moonView.classList.remove('view-visible');
-      moonView.classList.add('view-hidden');
+      mainActionBtn.textContent = "Enter Universe";
+      spaceHint.classList.remove('flex');
+      spaceHint.classList.add('hidden');
 
-      setTimeout(() => {
-        moonView.classList.add('hidden');
-        heroView.classList.remove('hidden');
-        setTimeout(() => {
-          heroView.classList.remove('view-hidden');
-          heroView.classList.add('view-visible');
-        }, 30);
-      }, 500);
-
-      navActionBtn.textContent = "Enter Universe";
+      // Show Hero view
+      heroView.classList.remove('view-hidden');
+      heroView.classList.add('view-visible');
     }
 
-    // Realistic Three.js 3D Moon Renderer
-    let moonInitialized = false;
-    let scene, camera, renderer, moonMesh, starsMesh;
-    let rotationSpeed = 0.002;
+    // ==========================================
+    // THREE.JS 3D SPACE & ULTRA-REALISTIC MOON
+    // ==========================================
+    let threeInitialized = false;
+    let scene, camera, renderer;
+    let moonMesh, starField, planetGroup;
+    let planets = [];
 
-    function initMoonScene() {
-      moonInitialized = true;
-      const container = document.getElementById('moon-canvas-container');
-      const width = container.clientWidth || window.innerWidth;
-      const height = container.clientHeight || window.innerHeight;
+    // Interaction controls
+    let isDragging = false;
+    let previousPointerPosition = { x: 0, y: 0 };
+    let targetRotationX = 0;
+    let targetRotationY = 0;
+    let currentRotationX = 0;
+    let currentRotationY = 0;
+    let isUserInteracting = false;
+    let userInteractionTimeout = null;
+
+    // Fly-through animation variables
+    let isFlying = false;
+    let flyProgress = 0;
+    const flyDuration = 2200; // ms
+    let flyStartTime = 0;
+
+    function initThreeSpace() {
+      threeInitialized = true;
+      const canvas = document.getElementById('space-canvas');
+      const width = window.innerWidth;
+      const height = window.innerHeight;
 
       // Scene & Camera
       scene = new THREE.Scene();
-      camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-      camera.position.z = 4.8;
+      camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 2000);
+      camera.position.set(0, 0, 80); // Starts far back for fly-through
 
       // Renderer
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer = new THREE.WebGLRenderer({
+        canvas: canvas,
+        antialias: true,
+        alpha: true,
+        powerPreference: "high-performance"
+      });
       renderer.setSize(width, height);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      container.appendChild(renderer.domElement);
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.2;
 
-      // Generate Procedural High-Detail Lunar Surface Texture
-      const moonCanvas = document.createElement('canvas');
-      moonCanvas.width = 2048;
-      moonCanvas.height = 1024;
-      const ctx = moonCanvas.getContext('2d');
+      // 1. STARFIELD & COSMIC NEBULA DUST
+      const starGeo = new THREE.BufferGeometry();
+      const starCount = 2400;
+      const starPositions = new Float32Array(starCount * 3);
+      const starColors = new Float32Array(starCount * 3);
 
-      // Base lunar gray gradient
-      const grad = ctx.createLinearGradient(0, 0, 0, moonCanvas.height);
-      grad.addColorStop(0, '#9e9e9e');
-      grad.addColorStop(0.5, '#bfbfbf');
-      grad.addColorStop(1, '#8c8c8c');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, moonCanvas.width, moonCanvas.height);
+      for (let i = 0; i < starCount * 3; i += 3) {
+        starPositions[i] = (Math.random() - 0.5) * 700;
+        starPositions[i + 1] = (Math.random() - 0.5) * 700;
+        starPositions[i + 2] = -Math.random() * 450 - 10;
 
-      // Lunar Maria (Dark plains)
-      ctx.fillStyle = 'rgba(45, 45, 50, 0.4)';
-      const mariaSpots = [
-        { x: 600, y: 350, r: 240 },
-        { x: 900, y: 400, r: 280 },
-        { x: 1300, y: 450, r: 320 },
-        { x: 750, y: 600, r: 210 },
-        { x: 1100, y: 300, r: 190 },
-        { x: 1550, y: 520, r: 250 },
-        { x: 350, y: 480, r: 170 }
-      ];
-      mariaSpots.forEach(s => {
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        ctx.filter = 'blur(35px)';
-        ctx.fill();
+        const colorType = Math.random();
+        if (colorType > 0.85) {
+          // Blue star
+          starColors[i] = 0.82; starColors[i + 1] = 0.90; starColors[i + 2] = 1.0;
+        } else if (colorType > 0.7) {
+          // Amber/Gold star
+          starColors[i] = 1.0; starColors[i + 1] = 0.84; starColors[i + 2] = 0.65;
+        } else {
+          // Pure white star
+          starColors[i] = 0.96; starColors[i + 1] = 0.96; starColors[i + 2] = 0.96;
+        }
+      }
+      starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+      starGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
+      const starMat = new THREE.PointsMaterial({
+        size: 1.2,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.95
       });
-      ctx.filter = 'none';
+      starField = new THREE.Points(starGeo, starMat);
+      scene.add(starField);
 
-      // High-Frequency Lunar Craters
-      for (let i = 0; i < 900; i++) {
-        const cx = Math.random() * moonCanvas.width;
-        const cy = Math.random() * moonCanvas.height;
-        const cr = Math.random() * 18 + 2;
+      // 2. SOLAR SYSTEM PLANETS VISIBLE DURING SPACE FLY-THROUGH
+      planetGroup = new THREE.Group();
+      scene.add(planetGroup);
 
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
-        ctx.lineWidth = Math.random() * 2 + 1;
-        ctx.beginPath();
-        ctx.arc(cx, cy, cr, 0, Math.PI * 2);
-        ctx.stroke();
+      function createPlanet(size, color, x, y, z, hasRing = false) {
+        const pGeo = new THREE.SphereGeometry(size, 32, 32);
+        const pMat = new THREE.MeshStandardMaterial({
+          color: color,
+          roughness: 0.7,
+          metalness: 0.1
+        });
+        const mesh = new THREE.Mesh(pGeo, pMat);
+        mesh.position.set(x, y, z);
+        planetGroup.add(mesh);
 
-        ctx.fillStyle = 'rgba(20, 20, 25, 0.5)';
-        ctx.beginPath();
-        ctx.arc(cx + cr * 0.2, cy + cr * 0.2, cr * 0.75, 0, Math.PI * 2);
-        ctx.fill();
+        if (hasRing) {
+          const ringGeo = new THREE.RingGeometry(size * 1.4, size * 2.2, 48);
+          const ringMat = new THREE.MeshBasicMaterial({
+            color: 0xc4b496,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.75
+          });
+          const ring = new THREE.Mesh(ringGeo, ringMat);
+          ring.rotation.x = Math.PI / 2.5;
+          mesh.add(ring);
+        }
+
+        planets.push(mesh);
+        return mesh;
       }
 
-      // Rayed crater (Tycho-like rays)
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-      ctx.lineWidth = 1.5;
-      for (let a = 0; a < Math.PI * 2; a += 0.15) {
-        ctx.beginPath();
-        ctx.moveTo(1100, 750);
-        ctx.lineTo(1100 + Math.cos(a) * 350, 750 + Math.sin(a) * 350);
-        ctx.stroke();
-      }
+      // Distant Solar System Planets
+      createPlanet(3.8, 0xff9900, -24, 16, 45);   // Glowing Sun / Gas Giant
+      createPlanet(1.4, 0x2563eb, 19, -12, 35);   // Blue Earth
+      createPlanet(0.9, 0xdc2626, -15, -9, 25);   // Red Mars
+      createPlanet(2.8, 0xd97706, 26, 13, 15, true); // Saturn with Rings
+      createPlanet(3.2, 0xa16207, -22, -14, 5);  // Jupiter
 
-      const texture = new THREE.CanvasTexture(moonCanvas);
+      // 3. ULTRA-REALISTIC PROCEDURAL NASA MOON TEXTURE & SHADING
+      const textureData = generateRealisticMoonTextures();
 
-      // Moon Sphere Geometry
-      const geometry = new THREE.SphereGeometry(1.5, 64, 64);
-      const material = new THREE.MeshStandardMaterial({
-        map: texture,
+      const moonGeo = new THREE.SphereGeometry(1.65, 128, 128);
+      const moonMat = new THREE.MeshStandardMaterial({
+        map: textureData.albedo,
+        bumpMap: textureData.bump,
+        bumpScale: 0.055,
+        roughnessMap: textureData.roughness,
         roughness: 0.85,
-        metalness: 0.1
+        metalness: 0.05
       });
 
-      moonMesh = new THREE.Mesh(geometry, material);
-      // Center position adjusted slightly based on screen width
+      moonMesh = new THREE.Mesh(moonGeo, moonMat);
       moonMesh.position.set(0, 0, 0);
       scene.add(moonMesh);
 
-      // Star Particles Background
-      const starGeo = new THREE.BufferGeometry();
-      const starCount = 600;
-      const starPositions = new Float32Array(starCount * 3);
-      for (let i = 0; i < starCount * 3; i += 3) {
-        starPositions[i] = (Math.random() - 0.5) * 40;
-        starPositions[i + 1] = (Math.random() - 0.5) * 40;
-        starPositions[i + 2] = -Math.random() * 20 - 5;
-      }
-      starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-      const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.05, transparent: true, opacity: 0.8 });
-      starsMesh = new THREE.Points(starGeo, starMat);
-      scene.add(starsMesh);
-
-      // Celestial Lighting
-      const ambientLight = new THREE.AmbientLight(0x222233, 0.8);
+      // 4. CELESTIAL LIGHTING (Direct sunlight casting realistic crater shadows)
+      const ambientLight = new THREE.AmbientLight(0x1c1c28, 0.75);
       scene.add(ambientLight);
 
-      const sunLight = new THREE.DirectionalLight(0xffffff, 2.2);
-      sunLight.position.set(5, 3, 5);
+      const sunLight = new THREE.DirectionalLight(0xffffff, 2.6);
+      sunLight.position.set(7, 3.5, 5);
       scene.add(sunLight);
 
-      // Animation Loop
+      const rimLight = new THREE.DirectionalLight(0x4466aa, 0.45);
+      rimLight.position.set(-7, -2, -4);
+      scene.add(rimLight);
+
+      // 5. TOUCH & MOUSE INTERACTIVE ROTATION EVENTS
+      setupInteractionListeners(canvas);
+
+      // 6. ANIMATION LOOP
       function animate() {
         requestAnimationFrame(animate);
+
+        // Fly-through camera interpolation
+        if (isFlying) {
+          const now = performance.now();
+          const elapsed = now - flyStartTime;
+          flyProgress = Math.min(elapsed / flyDuration, 1);
+
+          // Smooth cubic ease out
+          const ease = 1 - Math.pow(1 - flyProgress, 3);
+          
+          // Camera flies from z=80 down to z=4.4
+          camera.position.z = 80 - ease * (80 - 4.4);
+          camera.position.x = Math.sin((1 - ease) * Math.PI) * 4;
+          camera.position.y = Math.cos((1 - ease) * Math.PI) * 2;
+
+          // Planets drift past during fly-through
+          planets.forEach((p, idx) => {
+            p.position.z += 0.05;
+            p.rotation.y += 0.005 * (idx + 1);
+          });
+
+          if (flyProgress >= 1) {
+            isFlying = false;
+            camera.position.set(0, 0, 4.4);
+          }
+        }
+
+        // Smooth damping rotation on the Moon
+        currentRotationX += (targetRotationX - currentRotationX) * 0.1;
+        currentRotationY += (targetRotationY - currentRotationY) * 0.1;
+
         if (moonMesh) {
-          moonMesh.rotation.y += rotationSpeed;
+          moonMesh.rotation.y = currentRotationY;
+          moonMesh.rotation.x = currentRotationX;
+
+          // Continuous gentle auto-rotation when user is not touching/dragging
+          if (!isUserInteracting && !isDragging) {
+            targetRotationY += 0.0018;
+          }
         }
-        if (starsMesh) {
-          starsMesh.rotation.y += 0.0003;
+
+        if (starField) {
+          starField.rotation.y += 0.0002;
         }
+
         renderer.render(scene, camera);
       }
       animate();
 
-      // Window Resize Listener
-      window.addEventListener('resize', () => {
-        const w = container.clientWidth || window.innerWidth;
-        const h = container.clientHeight || window.innerHeight;
-        camera.aspect = w / h;
-        camera.updateProjectionMatrix();
-        renderer.setSize(w, h);
-      });
+      // Window resize
+      window.addEventListener('resize', onWindowResize);
     }
 
-    function rotateMoonSpeed() {
-      rotationSpeed = rotationSpeed === 0.002 ? 0.008 : 0.002;
+    function startFlyThroughAnimation() {
+      isFlying = true;
+      flyStartTime = performance.now();
+      flyProgress = 0;
+      targetRotationX = 0.05;
+      targetRotationY = 0;
+      currentRotationX = 0;
+      currentRotationY = 0;
+    }
+
+    // ==========================================
+    // ULTRA-REALISTIC LUNAR TEXTURE GENERATOR
+    // ==========================================
+    function generateRealisticMoonTextures() {
+      const width = 2048;
+      const height = 1024;
+
+      // --- Albedo Canvas (Color & Maria) ---
+      const albedoCanvas = document.createElement('canvas');
+      albedoCanvas.width = width;
+      albedoCanvas.height = height;
+      const aCtx = albedoCanvas.getContext('2d');
+
+      // Base realistic lunar regolith background
+      const baseGrad = aCtx.createLinearGradient(0, 0, 0, height);
+      baseGrad.addColorStop(0, '#9c9a96');
+      baseGrad.addColorStop(0.5, '#b5b3af');
+      baseGrad.addColorStop(1, '#8e8c88');
+      aCtx.fillStyle = baseGrad;
+      aCtx.fillRect(0, 0, width, height);
+
+      // Micro-surface noise
+      const imgData = aCtx.getImageData(0, 0, width, height);
+      const data = imgData.data;
+      for (let i = 0; i < data.length; i += 4) {
+        const noise = (Math.random() - 0.5) * 22;
+        data[i] = Math.min(255, Math.max(0, data[i] + noise));
+        data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + noise));
+        data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + noise));
+      }
+      aCtx.putImageData(imgData, 0, 0);
+
+      // Photorealistic Lunar Maria (Oceanus Procellarum, Mare Tranquillitatis, Imbrium, etc.)
+      aCtx.fillStyle = 'rgba(40, 38, 42, 0.68)';
+      const maria = [
+        { x: 550, y: 380, rx: 280, ry: 190 }, // Oceanus Procellarum
+        { x: 800, y: 320, rx: 200, ry: 160 }, // Mare Imbrium
+        { x: 1050, y: 360, rx: 180, ry: 140 }, // Mare Serenitatis
+        { x: 1250, y: 440, rx: 220, ry: 170 }, // Mare Tranquillitatis
+        { x: 1480, y: 410, rx: 140, ry: 130 }, // Mare Crisium
+        { x: 1380, y: 560, rx: 170, ry: 130 }, // Mare Fecunditatis
+        { x: 700, y: 580, rx: 180, ry: 140 },  // Mare Nubium
+        { x: 950, y: 620, rx: 130, ry: 100 }   // Mare Humorum
+      ];
+
+      maria.forEach(m => {
+        aCtx.beginPath();
+        aCtx.ellipse(m.x, m.y, m.rx, m.ry, Math.random() * 0.4, 0, Math.PI * 2);
+        aCtx.filter = 'blur(45px)';
+        aCtx.fill();
+      });
+      aCtx.filter = 'none';
+
+      // --- Bump & Crater Canvas ---
+      const bumpCanvas = document.createElement('canvas');
+      bumpCanvas.width = width;
+      bumpCanvas.height = height;
+      const bCtx = bumpCanvas.getContext('2d');
+      bCtx.fillStyle = '#808080';
+      bCtx.fillRect(0, 0, width, height);
+
+      // Realistic impact craters across lunar surface
+      for (let i = 0; i < 1500; i++) {
+        const cx = Math.random() * width;
+        const cy = Math.random() * height;
+        const radius = Math.pow(Math.random(), 3) * 32 + 2;
+
+        // Crater rim (bright high elevation)
+        bCtx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+        bCtx.lineWidth = Math.max(1, radius * 0.18);
+        bCtx.beginPath();
+        bCtx.arc(cx, cy, radius, 0, Math.PI * 2);
+        bCtx.stroke();
+
+        // Crater interior depth
+        bCtx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        bCtx.beginPath();
+        bCtx.arc(cx + radius * 0.15, cy + radius * 0.15, radius * 0.82, 0, Math.PI * 2);
+        bCtx.fill();
+
+        // Also add crater to albedo
+        aCtx.strokeStyle = 'rgba(230, 230, 235, 0.45)';
+        aCtx.lineWidth = Math.max(1, radius * 0.15);
+        aCtx.beginPath();
+        aCtx.arc(cx, cy, radius, 0, Math.PI * 2);
+        aCtx.stroke();
+      }
+
+      // Prominent Rayed Craters (Tycho & Copernicus with bright rays)
+      function drawRayedCrater(x, y, radius, rayCount, rayLength) {
+        // Center crater
+        aCtx.fillStyle = '#ffffff';
+        aCtx.beginPath();
+        aCtx.arc(x, y, radius, 0, Math.PI * 2);
+        aCtx.fill();
+
+        // Filamentous rays
+        for (let a = 0; a < Math.PI * 2; a += (Math.PI * 2) / rayCount) {
+          const len = rayLength * (0.6 + Math.random() * 0.8);
+          aCtx.strokeStyle = 'rgba(240, 240, 255, 0.38)';
+          aCtx.lineWidth = Math.random() * 2 + 1;
+          aCtx.beginPath();
+          aCtx.moveTo(x, y);
+          aCtx.lineTo(x + Math.cos(a) * len, y + Math.sin(a) * len);
+          aCtx.stroke();
+        }
+      }
+
+      drawRayedCrater(900, 750, 14, 36, 480); // Tycho Crater
+      drawRayedCrater(700, 360, 12, 28, 320); // Copernicus Crater
+      drawRayedCrater(560, 420, 9, 20, 240);  // Kepler Crater
+
+      // Textures creation
+      const albedoTex = new THREE.CanvasTexture(albedoCanvas);
+      const bumpTex = new THREE.CanvasTexture(bumpCanvas);
+      const roughnessTex = new THREE.CanvasTexture(bumpCanvas);
+
+      return {
+        albedo: albedoTex,
+        bump: bumpTex,
+        roughness: roughnessTex
+      };
+    }
+
+    // ==========================================
+    // TOUCH & MOUSE ROTATION LOGIC (POINTER EVENTS)
+    // ==========================================
+    function setupInteractionListeners(canvas) {
+      function onPointerDown(e) {
+        if (!inSpaceMode) return;
+        isDragging = true;
+        isUserInteracting = true;
+        clearTimeout(userInteractionTimeout);
+
+        previousPointerPosition = { x: e.clientX, y: e.clientY };
+      }
+
+      function onPointerMove(e) {
+        if (!isDragging || !inSpaceMode) return;
+
+        const deltaX = e.clientX - previousPointerPosition.x;
+        const deltaY = e.clientY - previousPointerPosition.y;
+
+        // Smooth rotation sensitivity
+        targetRotationY += deltaX * 0.007;
+        targetRotationX += deltaY * 0.007;
+
+        // Clamp vertical pitch
+        targetRotationX = Math.max(-Math.PI / 2.5, Math.min(Math.PI / 2.5, targetRotationX));
+
+        previousPointerPosition = { x: e.clientX, y: e.clientY };
+      }
+
+      function onPointerUp() {
+        isDragging = false;
+        clearTimeout(userInteractionTimeout);
+        // Resume slow auto-rotation after 3.5 seconds of inactivity
+        userInteractionTimeout = setTimeout(() => {
+          isUserInteracting = false;
+        }, 3500);
+      }
+
+      canvas.addEventListener('pointerdown', onPointerDown);
+      window.addEventListener('pointermove', onPointerMove);
+      window.addEventListener('pointerup', onPointerUp);
+      window.addEventListener('pointercancel', onPointerUp);
+    }
+
+    function onWindowResize() {
+      if (!renderer || !camera) return;
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
     }
   </script>
 </body>
