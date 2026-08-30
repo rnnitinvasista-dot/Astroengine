@@ -4,11 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Universe — See the shape of the noise</title>
-  <meta name="description" content="Think a number in your mind from 1 to 249 with your question, then enter the universe.">
+  <meta name="description" content="Enter the Universe to observe the Moon and explore its cosmic details.">
   
-  <!-- Tailwind CSS & Iconify -->
+  <!-- Tailwind CSS, Three.js for realistic Moon, & Iconify -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap');
@@ -37,12 +38,13 @@
       font-family: 'Instrument Serif', serif;
     }
 
-    /* Hardware Accelerated Video Background */
+    /* Video Background */
     #hero-video {
       transform: translate3d(0, 0, 0);
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
-      will-change: transform;
+      will-change: transform, opacity;
+      transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1), transform 1.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .liquid-glass {
@@ -107,17 +109,40 @@
       pointer-events: none;
     }
 
-    .glass-modal-backdrop {
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+    /* Transition states */
+    .view-hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.95);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+
+    .view-visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: scale(1);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+
+    /* Custom scrollbar for moon details on small screens */
+    .moon-scroll::-webkit-scrollbar {
+      width: 4px;
+    }
+    .moon-scroll::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
     }
   </style>
 </head>
-<body class="bg-black text-white selection:bg-white selection:text-black">
+<body class="bg-black text-white selection:bg-white selection:text-black font-sans">
   <div class="h-[100dvh] max-h-[100dvh] w-full flex flex-col justify-between overflow-hidden relative select-none">
-    <!-- 4K / Full HD Background Video -->
+    
+    <!-- Background Video (Boy standing looking at the sky) -->
     <video id="hero-video" class="absolute inset-0 w-full h-full object-cover object-bottom pointer-events-none"
            muted autoplay loop playsinline preload="auto"></video>
+
+    <!-- 3D Realistic Moon Canvas Container (Renders realistic Moon on Enter Universe) -->
+    <div id="moon-canvas-container" class="absolute inset-0 w-full h-full pointer-events-none opacity-0 transition-opacity duration-1000 z-[5]"></div>
 
     <!-- Top Navbar -->
     <header class="relative z-20 px-3 sm:px-6 pt-2 sm:pt-4 md:pt-6 shrink-0">
@@ -132,73 +157,197 @@
           </svg>
           <span class="font-semibold text-sm sm:text-base md:text-lg tracking-tight">Universe</span>
           <div class="hidden md:flex gap-6 lg:gap-8 ml-6">
-            <a href="#oracle" class="text-white/80 hover:text-white text-xs md:text-sm font-medium transition-colors">Oracle</a>
-            <a href="#horary" class="text-white/80 hover:text-white text-xs md:text-sm font-medium transition-colors">Horary 249</a>
-            <a href="#insights" class="text-white/80 hover:text-white text-xs md:text-sm font-medium transition-colors">Insights</a>
+            <a href="#moon" onclick="enterUniverse(event)" class="text-white/80 hover:text-white text-xs md:text-sm font-medium transition-colors">Moon Planet</a>
+            <a href="#orbit" onclick="enterUniverse(event)" class="text-white/80 hover:text-white text-xs md:text-sm font-medium transition-colors">Orbit & Physics</a>
+            <a href="#cosmos" onclick="enterUniverse(event)" class="text-white/80 hover:text-white text-xs md:text-sm font-medium transition-colors">Cosmic Mind</a>
           </div>
         </div>
 
         <!-- Right Group -->
         <div class="flex items-center gap-2 md:gap-4">
-          <div class="hidden sm:flex items-center gap-1.5 text-white/60 text-[11px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/5 border border-white/10">
+          <div class="hidden sm:flex items-center gap-1.5 text-white/60 text-[11px] uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10">
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> 4K Ultra HD
           </div>
-          <button onclick="document.getElementById('user-name').focus()" class="bg-white rounded-full px-3 py-1 sm:px-4 sm:py-1.5 md:px-5 md:py-2 text-black text-xs md:text-sm font-semibold whitespace-nowrap hover:scale-105 active:scale-95 transition-transform">
+          <button id="nav-action-btn" onclick="toggleUniverseMode()" class="bg-white rounded-full px-3 py-1 sm:px-4 sm:py-1.5 md:px-5 md:py-2 text-black text-xs md:text-sm font-semibold whitespace-nowrap hover:scale-105 active:scale-95 transition-transform">
             Enter Universe
           </button>
         </div>
       </div>
     </header>
 
-    <!-- Center Hero Content -->
-    <main class="relative z-10 flex-1 flex flex-col items-center justify-center px-3 sm:px-6 py-1 sm:py-2 text-center my-auto w-full max-w-4xl mx-auto shrink min-h-0">
-      <!-- Headline (Responsive & non-clipping on all screens) -->
-      <h1 class="text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-serif-instrument tracking-tight leading-[1.1] md:whitespace-nowrap mb-1.5 sm:mb-2.5 md:mb-3 px-1"
-          style="text-shadow: 0 0 48px rgba(0, 0, 0, 0.7), 0 4px 20px rgba(0, 0, 0, 0.5);">
+    <!-- VIEW 1: HERO VIEW (Boy looking up with Enter Universe button) -->
+    <main id="hero-view" class="relative z-10 flex-1 flex flex-col items-center justify-center px-3 sm:px-6 py-2 text-center my-auto w-full max-w-4xl mx-auto shrink min-h-0 view-visible">
+      <h1 class="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-serif-instrument tracking-tight leading-[1.1] md:whitespace-nowrap mb-2 sm:mb-3 md:mb-4 px-1"
+          style="text-shadow: 0 0 54px rgba(0, 0, 0, 0.75), 0 4px 24px rgba(0, 0, 0, 0.6);">
         See the shape of the <em class="italic">universe</em>
       </h1>
       
-      <!-- Subline -->
-      <p class="text-white/75 text-xs sm:text-sm md:text-base leading-relaxed max-w-xl md:whitespace-nowrap mb-2.5 sm:mb-4 md:mb-6 px-2"
-         style="text-shadow: 0 0 24px rgba(0, 0, 0, 0.6), 0 1px 8px rgba(0, 0, 0, 0.4);">
-        Think a number in your mind (1 to 249) with your question, then enter the universe.
+      <p class="text-white/80 text-xs sm:text-sm md:text-base leading-relaxed max-w-xl md:whitespace-nowrap mb-6 sm:mb-8 md:mb-10 px-3"
+         style="text-shadow: 0 0 28px rgba(0, 0, 0, 0.7), 0 1px 10px rgba(0, 0, 0, 0.5);">
+        Gaze upward into the cosmic expanse to observe the Moon and reveal its celestial secrets.
       </p>
 
-      <!-- Universe Form (Ultra compact on mobile to guarantee full screen visibility) -->
-      <div class="w-full max-w-2xl px-1 sm:px-2">
-        <form id="universe-form" class="liquid-glass rounded-2xl md:rounded-full p-1.5 md:p-1.5 flex flex-col md:flex-row items-center gap-1.5 md:gap-3 w-full">
-          <!-- Name Input -->
-          <div class="w-full md:flex-1 flex items-center px-3 py-1 md:py-1 rounded-xl md:rounded-none bg-white/[0.06] md:bg-transparent">
-            <input type="text" id="user-name" required placeholder="Your Name"
-                   class="bg-transparent border-none outline-none w-full text-white placeholder:text-white/70 text-xs sm:text-sm">
+      <!-- Centered Enter Universe Action Pill -->
+      <div class="max-w-md w-full px-2">
+        <div class="liquid-glass rounded-full p-2 pl-6 pr-2 flex items-center justify-between gap-4 shadow-2xl">
+          <div class="flex items-center gap-2 text-left">
+            <span class="w-2 h-2 rounded-full bg-white animate-ping"></span>
+            <span class="text-xs sm:text-sm text-white/90 font-medium">Observe Lunar Orbit</span>
           </div>
-          
-          <div class="hidden md:block w-px h-6 bg-white/20"></div>
-
-          <!-- Question Input -->
-          <div class="w-full md:flex-[1.4] flex items-center px-3 py-1 md:py-1 rounded-xl md:rounded-none bg-white/[0.06] md:bg-transparent">
-            <input type="text" id="user-question" required placeholder="Your Question..."
-                   class="bg-transparent border-none outline-none w-full text-white placeholder:text-white/70 text-xs sm:text-sm">
-          </div>
-
-          <div class="hidden md:block w-px h-6 bg-white/20"></div>
-
-          <!-- Number Input (1 to 249) -->
-          <div class="w-full md:w-28 flex items-center px-3 py-1 md:py-1 rounded-xl md:rounded-none bg-white/[0.06] md:bg-transparent">
-            <input type="number" id="user-number" required min="1" max="249" placeholder="No. (1–249)"
-                   class="bg-transparent border-none outline-none w-full text-white placeholder:text-white/70 text-xs sm:text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
-          </div>
-
-          <!-- Submit Button -->
-          <button type="submit"
-                  class="bg-white rounded-full px-4 py-2 sm:px-5 sm:py-2.5 md:px-6 md:py-3 text-black text-xs sm:text-sm font-semibold whitespace-nowrap hover:scale-105 active:scale-95 transition-transform duration-200 w-full md:w-auto shadow-md">
-            Enter to Universe
+          <button onclick="enterUniverse(event)"
+                  class="bg-white rounded-full px-6 py-3 text-black text-xs sm:text-sm font-semibold whitespace-nowrap hover:scale-105 active:scale-95 transition-transform duration-200 shadow-xl flex items-center gap-2">
+            <span>Enter to Universe</span>
+            <iconify-icon icon="lucide:arrow-up-right" class="text-base"></iconify-icon>
           </button>
-        </form>
+        </div>
       </div>
     </main>
 
-    <!-- Bottom Social Row (Always fully visible on mobile) -->
+    <!-- VIEW 2: MOON PLANET DETAILS & CINEMATIC HUD VIEW -->
+    <section id="moon-view" class="relative z-10 flex-1 flex flex-col justify-between px-3 sm:px-6 py-2 w-full max-w-6xl mx-auto shrink min-h-0 view-hidden hidden">
+      <!-- Top Title Bar -->
+      <div class="flex items-center justify-between pt-1">
+        <div>
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-white/90 text-[10px] sm:text-xs tracking-widest uppercase mb-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+            Celestial Target • The Moon (Luna / Chandra)
+          </div>
+          <h2 class="text-2xl sm:text-4xl md:text-5xl font-serif-instrument text-white tracking-tight"
+              style="text-shadow: 0 0 40px rgba(0,0,0,0.8);">
+            Earth's Sole Natural Satellite
+          </h2>
+        </div>
+        <button onclick="exitUniverse()" class="liquid-glass rounded-full px-4 py-1.5 text-xs sm:text-sm font-medium text-white/90 hover:text-white flex items-center gap-1.5 transition-all hover:bg-white/10">
+          <iconify-icon icon="lucide:arrow-left" class="text-sm"></iconify-icon>
+          <span class="hidden sm:inline">Back to Earth</span>
+        </button>
+      </div>
+
+      <!-- Moon Details Cards Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 auto-rows-max md:auto-rows-fr gap-2.5 sm:gap-4 my-auto moon-scroll max-h-[68dvh] overflow-y-auto py-1 pr-1">
+        
+        <!-- Card 1: Physical & Orbital Telemetry -->
+        <div class="liquid-glass rounded-3xl p-4 sm:p-5 flex flex-col justify-between border border-white/15">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs uppercase tracking-widest text-white/60 font-semibold flex items-center gap-1.5">
+                <iconify-icon icon="lucide:orbit" class="text-sm text-white"></iconify-icon> Orbital & Physical Specs
+              </span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/80">Telemetry</span>
+            </div>
+            
+            <div class="space-y-2 text-xs sm:text-sm">
+              <div class="flex justify-between py-1 border-b border-white/10">
+                <span class="text-white/60">Mean Distance:</span>
+                <span class="font-medium text-white">384,400 km</span>
+              </div>
+              <div class="flex justify-between py-1 border-b border-white/10">
+                <span class="text-white/60">Equatorial Radius:</span>
+                <span class="font-medium text-white">1,737.4 km (0.272 Earth)</span>
+              </div>
+              <div class="flex justify-between py-1 border-b border-white/10">
+                <span class="text-white/60">Orbital Period:</span>
+                <span class="font-medium text-white">27.32 days (Synchronous)</span>
+              </div>
+              <div class="flex justify-between py-1 border-b border-white/10">
+                <span class="text-white/60">Surface Gravity:</span>
+                <span class="font-medium text-white">1.62 m/s² (0.166 g)</span>
+              </div>
+              <div class="flex justify-between py-1">
+                <span class="text-white/60">Surface Temp:</span>
+                <span class="font-medium text-white">-130°C to +120°C</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Lunar Surface & Key Features -->
+        <div class="liquid-glass rounded-3xl p-4 sm:p-5 flex flex-col justify-between border border-white/15">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs uppercase tracking-widest text-white/60 font-semibold flex items-center gap-1.5">
+                <iconify-icon icon="lucide:map-pin" class="text-sm text-white"></iconify-icon> Lunar Surface & Maria
+              </span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/80">Terrain</span>
+            </div>
+            
+            <p class="text-xs sm:text-sm text-white/80 leading-relaxed mb-3">
+              Characterized by dark basaltic plains (<em class="italic">maria</em>) and ancient cratered highlands formed by colossal meteorite impacts over 4.5 billion years.
+            </p>
+
+            <div class="grid grid-cols-2 gap-2 text-[11px] sm:text-xs">
+              <div class="p-2 rounded-xl bg-white/5 border border-white/10">
+                <div class="text-white/50 text-[9px] uppercase">Major Sea</div>
+                <div class="font-semibold text-white">Sea of Tranquility</div>
+              </div>
+              <div class="p-2 rounded-xl bg-white/5 border border-white/10">
+                <div class="text-white/50 text-[9px] uppercase">Rayed Crater</div>
+                <div class="font-semibold text-white">Tycho (85 km dia)</div>
+              </div>
+              <div class="p-2 rounded-xl bg-white/5 border border-white/10">
+                <div class="text-white/50 text-[9px] uppercase">Deep Basin</div>
+                <div class="font-semibold text-white">South Pole-Aitken</div>
+              </div>
+              <div class="p-2 rounded-xl bg-white/5 border border-white/10">
+                <div class="text-white/50 text-[9px] uppercase">Volcanic Dome</div>
+                <div class="font-semibold text-white">Mons Rümker</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Astrological & Cosmic Significance -->
+        <div class="liquid-glass rounded-3xl p-4 sm:p-5 flex flex-col justify-between border border-white/15">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs uppercase tracking-widest text-white/60 font-semibold flex items-center gap-1.5">
+                <iconify-icon icon="lucide:sparkles" class="text-sm text-white"></iconify-icon> Cosmic Astrological Identity
+              </span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/80">Vedic / KP</span>
+            </div>
+
+            <div class="space-y-2 text-xs sm:text-sm">
+              <div class="flex justify-between py-1 border-b border-white/10">
+                <span class="text-white/60">Ruling Sign:</span>
+                <span class="font-medium text-white">Cancer (Karkata)</span>
+              </div>
+              <div class="flex justify-between py-1 border-b border-white/10">
+                <span class="text-white/60">Karaka (Significator):</span>
+                <span class="font-medium text-white">Mind, Emotions, Intuition</span>
+              </div>
+              <div class="flex justify-between py-1 border-b border-white/10">
+                <span class="text-white/60">Exaltation / Debilitation:</span>
+                <span class="font-medium text-white">Taurus 3° / Scorpio 3°</span>
+              </div>
+              <div class="flex justify-between py-1">
+                <span class="text-white/60">Nakshatras:</span>
+                <span class="font-medium text-white">Rohini, Hasta, Shravana</span>
+              </div>
+            </div>
+
+            <div class="mt-3 p-2.5 rounded-2xl bg-white/5 border border-white/10 text-[11px] text-white/75 leading-relaxed">
+              "The Moon governs the subconscious tides of the mind (Manas) and life's emotional rhythms."
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Bottom Status Bar -->
+      <div class="flex items-center justify-between pt-1 text-[11px] text-white/50">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span>Photorealistic 3D Moon Telemetry Active</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="rotateMoonSpeed()" class="text-white/70 hover:text-white transition">Rotate Moon</button>
+          <span>•</span>
+          <button onclick="exitUniverse()" class="text-white underline hover:text-white transition">Return to Boy View</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bottom Social Row -->
     <footer class="relative z-10 flex justify-center gap-2.5 sm:gap-3 md:gap-4 pb-2 sm:pb-3 md:pb-6 pt-1 shrink-0">
       <button class="liquid-glass-circle w-9 h-9 sm:w-11 sm:h-11 md:w-14 md:h-14 flex items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/5 transition-all" aria-label="Instagram">
         <iconify-icon icon="lucide:instagram" class="text-sm sm:text-base md:text-xl"></iconify-icon>
@@ -212,119 +361,230 @@
     </footer>
   </div>
 
-  <!-- Universe Oracle Result Modal -->
-  <div id="oracle-modal" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 glass-modal-backdrop hidden opacity-0 transition-opacity duration-300">
-    <div class="liquid-glass rounded-3xl max-w-md w-full p-4 sm:p-6 md:p-7 text-center relative border border-white/20 shadow-2xl max-h-[90dvh] overflow-y-auto">
-      <!-- Top Badge -->
-      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-white/80 text-[10px] sm:text-[11px] tracking-wider uppercase mb-2 sm:mb-3">
-        <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
-        Cosmic Alignment • KP Horary 1–249
-      </div>
-
-      <h2 id="modal-name-title" class="text-2xl sm:text-3xl md:text-4xl font-serif-instrument text-white mb-0.5 sm:mb-1"></h2>
-      <p id="modal-question-text" class="text-white/60 text-xs sm:text-sm italic mb-3 sm:mb-4"></p>
-
-      <div class="grid grid-cols-3 gap-2 sm:gap-3 mb-3 sm:mb-4">
-        <div class="p-2 sm:p-2.5 rounded-2xl bg-white/5 border border-white/10">
-          <div class="text-[9px] sm:text-[10px] text-white/50 uppercase tracking-wide">Seed Number</div>
-          <div id="modal-seed-num" class="text-sm sm:text-base md:text-lg font-bold text-white mt-0.5"></div>
-        </div>
-        <div class="p-2 sm:p-2.5 rounded-2xl bg-white/5 border border-white/10">
-          <div class="text-[9px] sm:text-[10px] text-white/50 uppercase tracking-wide">Zodiac Sign</div>
-          <div id="modal-sign" class="text-xs sm:text-sm font-semibold text-white mt-0.5"></div>
-        </div>
-        <div class="p-2 sm:p-2.5 rounded-2xl bg-white/5 border border-white/10">
-          <div class="text-[9px] sm:text-[10px] text-white/50 uppercase tracking-wide">Sub-Lord</div>
-          <div id="modal-sublord" class="text-xs sm:text-sm font-semibold text-white mt-0.5"></div>
-        </div>
-      </div>
-
-      <div class="p-3 sm:p-4 rounded-2xl bg-white/5 border border-white/10 text-left mb-3 sm:mb-4">
-        <div class="text-[11px] sm:text-xs font-semibold text-white/80 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-          <iconify-icon icon="lucide:sparkles" class="text-sm text-emerald-400"></iconify-icon> Universe Oracle Verdict
-        </div>
-        <p id="modal-verdict" class="text-xs sm:text-sm text-white/80 leading-relaxed"></p>
-      </div>
-
-      <div class="flex items-center justify-center">
-        <button onclick="closeModal()" class="bg-white rounded-full px-5 py-2 sm:px-6 sm:py-2.5 text-black text-xs sm:text-sm font-semibold hover:scale-105 active:scale-95 transition-transform duration-200 shadow-md">
-          Ask Another Question
-        </button>
-      </div>
-    </div>
-  </div>
-
   <script>
-    // High Definition 4K / Full HD Background Video Setup
+    // Video Setup (Boy looking at the sky)
     const video = document.getElementById('hero-video');
     video.src = "https://designerstephen.github.io/public-assets/videos/observe-hero.mp4";
     video.playbackRate = 0.5;
 
-    // Astrological KP 1-249 Horary Calculation Engine
-    const signs = [
-      { name: "Aries (Mesha)", ruler: "Mars", maxNum: 22 },
-      { name: "Taurus (Vrishabha)", ruler: "Venus", maxNum: 43 },
-      { name: "Gemini (Mithuna)", ruler: "Mercury", maxNum: 64 },
-      { name: "Cancer (Karkata)", ruler: "Moon", maxNum: 85 },
-      { name: "Leo (Simha)", ruler: "Sun", maxNum: 106 },
-      { name: "Virgo (Kanya)", ruler: "Mercury", maxNum: 127 },
-      { name: "Libra (Tula)", ruler: "Venus", maxNum: 148 },
-      { name: "Scorpio (Vrishchika)", ruler: "Mars", maxNum: 169 },
-      { name: "Sagittarius (Dhanu)", ruler: "Jupiter", maxNum: 190 },
-      { name: "Capricorn (Makara)", ruler: "Saturn", maxNum: 211 },
-      { name: "Aquarius (Kumbha)", ruler: "Saturn", maxNum: 232 },
-      { name: "Pisces (Meena)", ruler: "Jupiter", maxNum: 249 }
-    ];
+    // View Navigation
+    let inMoonMode = false;
+    const heroView = document.getElementById('hero-view');
+    const moonView = document.getElementById('moon-view');
+    const moonCanvasContainer = document.getElementById('moon-canvas-container');
+    const navActionBtn = document.getElementById('nav-action-btn');
 
-    const subLords = ["Ketu", "Venus", "Sun", "Moon", "Mars", "Rahu", "Jupiter", "Saturn", "Mercury"];
+    function toggleUniverseMode() {
+      if (inMoonMode) {
+        exitUniverse();
+      } else {
+        enterUniverse();
+      }
+    }
 
-    const oracleMessages = [
-      "The planetary tides indicate favorable momentum. Your thought connects with a positive cusp, signaling success through decisive action.",
-      "The cosmic current advises patience. Underlying factors are aligning behind the scenes; the outcome will reveal itself with clarity soon.",
-      "A transformative alignment is present. Harmony between your intent and the cosmic sub-lord indicates a breakthrough.",
-      "The vibrational pattern suggests dynamic expansion. Trust your intuition and proceed with steady conviction.",
-      "The celestial aspects reflect wisdom and illumination. Your question carries the seeds of a fruitful resolution."
-    ];
+    function enterUniverse(e) {
+      if (e) e.preventDefault();
+      inMoonMode = true;
 
-    const form = document.getElementById('universe-form');
-    const modal = document.getElementById('oracle-modal');
+      // Animate background video to pan/zoom upward toward the cosmos
+      video.style.transform = 'scale(1.4) translateY(-18%)';
+      video.style.opacity = '0.35';
 
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const name = document.getElementById('user-name').value.trim();
-      const question = document.getElementById('user-question').value.trim();
-      const num = parseInt(document.getElementById('user-number').value, 10);
+      // Switch views
+      heroView.classList.remove('view-visible');
+      heroView.classList.add('view-hidden');
 
-      if (!num || num < 1 || num > 249) {
-        alert("Please enter a valid number between 1 and 249.");
-        return;
+      setTimeout(() => {
+        heroView.classList.add('hidden');
+        moonView.classList.remove('hidden');
+        setTimeout(() => {
+          moonView.classList.remove('view-hidden');
+          moonView.classList.add('view-visible');
+        }, 30);
+      }, 500);
+
+      // Show 3D realistic moon
+      moonCanvasContainer.classList.remove('opacity-0');
+      moonCanvasContainer.classList.add('opacity-100');
+      navActionBtn.textContent = "Back to Earth";
+
+      if (!moonInitialized) {
+        initMoonScene();
+      }
+    }
+
+    function exitUniverse() {
+      inMoonMode = false;
+
+      // Reset video
+      video.style.transform = 'translate3d(0, 0, 0) scale(1)';
+      video.style.opacity = '1';
+
+      // Hide moon
+      moonCanvasContainer.classList.remove('opacity-100');
+      moonCanvasContainer.classList.add('opacity-0');
+
+      // Switch views
+      moonView.classList.remove('view-visible');
+      moonView.classList.add('view-hidden');
+
+      setTimeout(() => {
+        moonView.classList.add('hidden');
+        heroView.classList.remove('hidden');
+        setTimeout(() => {
+          heroView.classList.remove('view-hidden');
+          heroView.classList.add('view-visible');
+        }, 30);
+      }, 500);
+
+      navActionBtn.textContent = "Enter Universe";
+    }
+
+    // Realistic Three.js 3D Moon Renderer
+    let moonInitialized = false;
+    let scene, camera, renderer, moonMesh, starsMesh;
+    let rotationSpeed = 0.002;
+
+    function initMoonScene() {
+      moonInitialized = true;
+      const container = document.getElementById('moon-canvas-container');
+      const width = container.clientWidth || window.innerWidth;
+      const height = container.clientHeight || window.innerHeight;
+
+      // Scene & Camera
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+      camera.position.z = 4.8;
+
+      // Renderer
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(width, height);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      container.appendChild(renderer.domElement);
+
+      // Generate Procedural High-Detail Lunar Surface Texture
+      const moonCanvas = document.createElement('canvas');
+      moonCanvas.width = 2048;
+      moonCanvas.height = 1024;
+      const ctx = moonCanvas.getContext('2d');
+
+      // Base lunar gray gradient
+      const grad = ctx.createLinearGradient(0, 0, 0, moonCanvas.height);
+      grad.addColorStop(0, '#9e9e9e');
+      grad.addColorStop(0.5, '#bfbfbf');
+      grad.addColorStop(1, '#8c8c8c');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, moonCanvas.width, moonCanvas.height);
+
+      // Lunar Maria (Dark plains)
+      ctx.fillStyle = 'rgba(45, 45, 50, 0.4)';
+      const mariaSpots = [
+        { x: 600, y: 350, r: 240 },
+        { x: 900, y: 400, r: 280 },
+        { x: 1300, y: 450, r: 320 },
+        { x: 750, y: 600, r: 210 },
+        { x: 1100, y: 300, r: 190 },
+        { x: 1550, y: 520, r: 250 },
+        { x: 350, y: 480, r: 170 }
+      ];
+      mariaSpots.forEach(s => {
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.filter = 'blur(35px)';
+        ctx.fill();
+      });
+      ctx.filter = 'none';
+
+      // High-Frequency Lunar Craters
+      for (let i = 0; i < 900; i++) {
+        const cx = Math.random() * moonCanvas.width;
+        const cy = Math.random() * moonCanvas.height;
+        const cr = Math.random() * 18 + 2;
+
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+        ctx.lineWidth = Math.random() * 2 + 1;
+        ctx.beginPath();
+        ctx.arc(cx, cy, cr, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.fillStyle = 'rgba(20, 20, 25, 0.5)';
+        ctx.beginPath();
+        ctx.arc(cx + cr * 0.2, cy + cr * 0.2, cr * 0.75, 0, Math.PI * 2);
+        ctx.fill();
       }
 
-      // Calculate Sign and Sublord
-      let matchedSign = signs.find(s => num <= s.maxNum) || signs[signs.length - 1];
-      let subLord = subLords[(num - 1) % subLords.length];
-      let verdict = oracleMessages[(num + question.length) % oracleMessages.length];
+      // Rayed crater (Tycho-like rays)
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+      ctx.lineWidth = 1.5;
+      for (let a = 0; a < Math.PI * 2; a += 0.15) {
+        ctx.beginPath();
+        ctx.moveTo(1100, 750);
+        ctx.lineTo(1100 + Math.cos(a) * 350, 750 + Math.sin(a) * 350);
+        ctx.stroke();
+      }
 
-      // Populate Modal
-      document.getElementById('modal-name-title').textContent = `${name}'s Reading`;
-      document.getElementById('modal-question-text').textContent = `"${question}"`;
-      document.getElementById('modal-seed-num').textContent = `#${num}`;
-      document.getElementById('modal-sign').textContent = matchedSign.name.split(' ')[0];
-      document.getElementById('modal-sublord').textContent = `${subLord} (${matchedSign.ruler})`;
-      document.getElementById('modal-verdict').textContent = verdict;
+      const texture = new THREE.CanvasTexture(moonCanvas);
 
-      // Show Modal
-      modal.classList.remove('hidden');
-      setTimeout(() => {
-        modal.classList.remove('opacity-0');
-      }, 10);
-    });
+      // Moon Sphere Geometry
+      const geometry = new THREE.SphereGeometry(1.5, 64, 64);
+      const material = new THREE.MeshStandardMaterial({
+        map: texture,
+        roughness: 0.85,
+        metalness: 0.1
+      });
 
-    function closeModal() {
-      modal.classList.add('opacity-0');
-      setTimeout(() => {
-        modal.classList.add('hidden');
-      }, 300);
+      moonMesh = new THREE.Mesh(geometry, material);
+      // Center position adjusted slightly based on screen width
+      moonMesh.position.set(0, 0, 0);
+      scene.add(moonMesh);
+
+      // Star Particles Background
+      const starGeo = new THREE.BufferGeometry();
+      const starCount = 600;
+      const starPositions = new Float32Array(starCount * 3);
+      for (let i = 0; i < starCount * 3; i += 3) {
+        starPositions[i] = (Math.random() - 0.5) * 40;
+        starPositions[i + 1] = (Math.random() - 0.5) * 40;
+        starPositions[i + 2] = -Math.random() * 20 - 5;
+      }
+      starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+      const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.05, transparent: true, opacity: 0.8 });
+      starsMesh = new THREE.Points(starGeo, starMat);
+      scene.add(starsMesh);
+
+      // Celestial Lighting
+      const ambientLight = new THREE.AmbientLight(0x222233, 0.8);
+      scene.add(ambientLight);
+
+      const sunLight = new THREE.DirectionalLight(0xffffff, 2.2);
+      sunLight.position.set(5, 3, 5);
+      scene.add(sunLight);
+
+      // Animation Loop
+      function animate() {
+        requestAnimationFrame(animate);
+        if (moonMesh) {
+          moonMesh.rotation.y += rotationSpeed;
+        }
+        if (starsMesh) {
+          starsMesh.rotation.y += 0.0003;
+        }
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      // Window Resize Listener
+      window.addEventListener('resize', () => {
+        const w = container.clientWidth || window.innerWidth;
+        const h = container.clientHeight || window.innerHeight;
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
+      });
+    }
+
+    function rotateMoonSpeed() {
+      rotationSpeed = rotationSpeed === 0.002 ? 0.008 : 0.002;
     }
   </script>
 </body>
