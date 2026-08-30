@@ -129,7 +129,7 @@
           <span class="font-semibold text-base md:text-lg tracking-tight">Universe</span>
         </div>
 
-        <!-- Center Active Planet Badge (Clean: No 2K or 9 planet mentions) -->
+        <!-- Center Active Planet Badge (Clean: No 2K or 9 planet text) -->
         <div id="active-planet-badge" class="hidden items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs sm:text-sm font-medium text-white shadow-lg">
           <span id="active-planet-dot" class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
           <span id="active-planet-name">Solar System</span>
@@ -178,12 +178,15 @@
       </div>
     </main>
 
-    <!-- Bottom Instruction / Current Time Bar (Visible in Space Mode) -->
-    <div id="space-tap-hint" class="relative z-30 px-4 pb-4 pt-1 text-center hidden opacity-0 transition-opacity duration-700">
-      <div class="inline-flex items-center gap-2 text-xs sm:text-sm text-white/80 px-5 py-2 rounded-full liquid-glass shadow-lg">
-        <iconify-icon icon="lucide:clock" class="text-sm text-amber-400"></iconify-icon>
-        <span id="current-time-display" class="font-medium tracking-wide">See your current time: --:--:--</span>
-      </div>
+    <!-- Bottom Action Button: "See your current time" (Visible in Space Mode) -->
+    <div id="space-bottom-bar" class="relative z-30 px-4 pb-4 pt-1 text-center hidden opacity-0 transition-opacity duration-700 flex justify-center">
+      <button id="see-current-time-btn" onclick="handleSeeCurrentTime()"
+              class="liquid-glass rounded-full px-6 py-2.5 text-xs sm:text-sm font-semibold text-white hover:scale-105 active:scale-95 transition-all shadow-2xl flex items-center gap-2.5 group">
+        <span>See your current time</span>
+        <div class="w-5 h-5 rounded-full bg-white/15 flex items-center justify-center group-hover:translate-x-0.5 transition-transform">
+          <iconify-icon icon="lucide:arrow-right" class="text-xs text-white"></iconify-icon>
+        </div>
+      </button>
     </div>
 
     <!-- Empty Spacer for Hero view -->
@@ -204,21 +207,14 @@
     const activePlanetDot = document.getElementById('active-planet-dot');
     const activePlanetName = document.getElementById('active-planet-name');
     const orbitViewBtn = document.getElementById('orbit-view-btn');
-    const spaceTapHint = document.getElementById('space-tap-hint');
-    const currentTimeDisplay = document.getElementById('current-time-display');
+    const spaceBottomBar = document.getElementById('space-bottom-bar');
     const heroSpacer = document.getElementById('hero-spacer');
 
-    // Live Clock Updater
-    function updateLiveTime() {
-      const now = new Date();
-      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-      const dateStr = now.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
-      if (currentTimeDisplay) {
-        currentTimeDisplay.textContent = `See your current time: ${timeStr} • ${dateStr}`;
-      }
+    // Handler for "See your current time" button click
+    function handleSeeCurrentTime() {
+      console.log('See your current time button clicked');
+      // Ready for next step
     }
-    setInterval(updateLiveTime, 1000);
-    updateLiveTime();
 
     function toggleUniverseMode() {
       if (inSpaceMode) {
@@ -250,9 +246,9 @@
       activePlanetBadge.classList.add('flex');
       
       heroSpacer.classList.add('hidden');
-      spaceTapHint.classList.remove('hidden');
+      spaceBottomBar.classList.remove('hidden');
       setTimeout(() => {
-        spaceTapHint.classList.remove('opacity-0');
+        spaceBottomBar.classList.remove('opacity-0');
       }, 100);
 
       if (!threeInitialized) {
@@ -282,9 +278,9 @@
       orbitViewBtn.classList.remove('flex');
       orbitViewBtn.classList.add('hidden');
       
-      spaceTapHint.classList.add('opacity-0');
+      spaceBottomBar.classList.add('opacity-0');
       setTimeout(() => {
-        spaceTapHint.classList.add('hidden');
+        spaceBottomBar.classList.add('hidden');
         heroSpacer.classList.remove('hidden');
       }, 300);
 
