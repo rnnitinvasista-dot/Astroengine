@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Universe — See the shape of the noise</title>
-  <meta name="description" content="Explore the solar system in real-time 3D orbit with photorealistic textures and ethereal AI astrology consultation.">
+  <meta name="description" content="Explore the solar system in real-time 3D orbit with photorealistic textures and voice-interactive Universe Assistant.">
   
   <!-- Tailwind CSS, Three.js, & Iconify -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -83,22 +83,27 @@
     }
 
     .liquid-card {
-      background: rgba(18, 20, 32, 0.7);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+      background: rgba(16, 18, 28, 0.82);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.18);
     }
 
     /* Floating Avatar Animation */
     @keyframes gentleFloat {
       0%, 100% { transform: translateY(0px) scale(1); }
-      50% { transform: translateY(-8px) scale(1.02); }
+      50% { transform: translateY(-7px) scale(1.02); }
     }
 
     @keyframes auroraPulse {
       0%, 100% { box-shadow: 0 0 25px rgba(56, 189, 248, 0.4), 0 0 50px rgba(168, 85, 247, 0.3); }
-      50% { box-shadow: 0 0 40px rgba(56, 189, 248, 0.7), 0 0 80px rgba(168, 85, 247, 0.5); }
+      50% { box-shadow: 0 0 45px rgba(56, 189, 248, 0.75), 0 0 85px rgba(168, 85, 247, 0.55); }
+    }
+
+    @keyframes listeningWave {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+      50% { transform: scale(1.06); box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
     }
 
     .avatar-float {
@@ -107,6 +112,10 @@
 
     .avatar-speaking {
       animation: gentleFloat 2.5s ease-in-out infinite, auroraPulse 1.8s ease-in-out infinite;
+    }
+
+    .mic-listening {
+      animation: listeningWave 1.4s ease-in-out infinite;
     }
 
     /* Transition states */
@@ -132,7 +141,6 @@
       cursor: grabbing;
     }
 
-    /* Custom scrollbar */
     .custom-scroll::-webkit-scrollbar {
       width: 4px;
     }
@@ -166,7 +174,7 @@
           <span class="font-semibold text-base md:text-lg tracking-tight">Universe</span>
         </div>
 
-        <!-- Center Active Planet Badge (Clean: No 2K or 9 planet text) -->
+        <!-- Center Active Planet Badge (Clean) -->
         <div id="active-planet-badge" class="hidden items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs sm:text-sm font-medium text-white shadow-lg">
           <span id="active-planet-dot" class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
           <span id="active-planet-name">Solar System</span>
@@ -213,7 +221,7 @@
       <!-- 1. "See your current time" Button -->
       <button id="see-current-time-btn" onclick="openEtherealConsultation()"
               class="liquid-glass rounded-full px-5 py-2.5 sm:px-6 sm:py-2.5 text-xs sm:text-sm font-semibold text-white hover:scale-105 active:scale-95 transition-all shadow-2xl flex items-center gap-2 group">
-        <iconify-icon icon="lucide:sparkles" class="text-sm text-amber-300"></iconify-icon>
+        <iconify-icon icon="lucide:sparkles" class="text-sm text-amber-300 animate-pulse"></iconify-icon>
         <span>See your current time</span>
         <iconify-icon icon="lucide:arrow-right" class="text-xs text-white/80 group-hover:translate-x-0.5 transition-transform"></iconify-icon>
       </button>
@@ -231,16 +239,16 @@
   </div>
 
   <!-- ========================================================================= -->
-  <!-- ETHEREAL CHARACTER & VOICE ASTROLOGY CONSULTATION MODAL -->
+  <!-- UNIVERSE ASSISTANT: ETHEREAL VOICE & MULTIMODAL CONVERSATION MODAL -->
   <!-- ========================================================================= -->
-  <div id="ethereal-modal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 opacity-0 transition-opacity duration-500">
-    <div class="liquid-card rounded-3xl w-full max-w-lg overflow-hidden flex flex-col max-h-[92dvh] relative animate-scale-in">
+  <div id="ethereal-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 opacity-0 transition-opacity duration-500">
+    <div class="liquid-card rounded-3xl w-full max-w-lg overflow-hidden flex flex-col max-h-[94dvh] relative">
       
-      <!-- Top Modal Bar -->
-      <div class="px-5 pt-4 pb-2 flex items-center justify-between border-b border-white/10 shrink-0">
+      <!-- Top Modal Header (Universe Assistant) -->
+      <div class="px-5 pt-4 pb-2.5 flex items-center justify-between border-b border-white/10 shrink-0">
         <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-cyan-300">
           <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
-          <span>Celestial Assistant</span>
+          <span>Universe Assistant</span>
         </div>
         <div class="flex items-center gap-2">
           <!-- Voice Mute/Unmute Toggle -->
@@ -258,57 +266,76 @@
       <div class="p-5 sm:p-6 overflow-y-auto custom-scroll flex-1 flex flex-col items-center text-center">
         
         <!-- Ethereal Aurora Glowing Character Avatar -->
-        <div class="relative mb-5 shrink-0 flex items-center justify-center">
+        <div class="relative mb-4 shrink-0 flex items-center justify-center">
           <div id="avatar-glow-ring" class="w-24 h-24 sm:w-28 sm:h-28 rounded-full avatar-float overflow-hidden relative shadow-2xl border border-white/30"
                style="box-shadow: 0 0 35px rgba(56, 189, 248, 0.45), 0 0 70px rgba(168, 85, 247, 0.35);">
-            <img src="./assets/avatar.jpg" alt="Ethereal Assistant" class="w-full h-full object-cover">
+            <img src="./assets/avatar.jpg" alt="Universe Assistant" class="w-full h-full object-cover">
           </div>
-          <!-- Voice Waves Indicator -->
-          <div id="speech-wave" class="absolute -bottom-2 flex items-center gap-1 bg-black/60 px-3 py-0.5 rounded-full border border-white/20 hidden">
-            <span class="w-1 h-3 bg-cyan-400 rounded-full animate-bounce"></span>
-            <span class="w-1 h-4 bg-violet-400 rounded-full animate-bounce [animation-delay:0.15s]"></span>
-            <span class="w-1 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:0.3s]"></span>
-            <span class="text-[10px] text-cyan-200 ml-1 font-medium">Speaking</span>
+          
+          <!-- Active Status Badge (Speaking or Listening) -->
+          <div id="status-wave-badge" class="absolute -bottom-2 flex items-center gap-1.5 bg-black/75 px-3 py-0.5 rounded-full border border-white/20 hidden">
+            <span id="wave-bar-1" class="w-1 h-3 bg-cyan-400 rounded-full animate-bounce"></span>
+            <span id="wave-bar-2" class="w-1 h-4 bg-violet-400 rounded-full animate-bounce [animation-delay:0.15s]"></span>
+            <span id="wave-bar-3" class="w-1 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:0.3s]"></span>
+            <span id="status-badge-text" class="text-[11px] text-cyan-200 font-medium">Speaking</span>
           </div>
         </div>
 
         <!-- Assistant Dialogue Text Bubble -->
-        <div id="assistant-speech-box" class="w-full bg-white/5 border border-white/10 rounded-2xl p-3.5 mb-6 text-sm sm:text-base leading-relaxed text-white/90">
+        <div id="assistant-speech-box" class="w-full bg-white/5 border border-white/10 rounded-2xl p-3.5 mb-5 text-sm sm:text-base leading-relaxed text-white/90 shadow-inner">
           <p id="assistant-text" class="font-normal transition-all duration-300">
             Welcome to Universe. What is your name?
           </p>
         </div>
 
+        <!-- Interactive Voice Listening Pill (Mic Status) -->
+        <div id="voice-listen-indicator" class="w-full flex items-center justify-center gap-2 mb-4 hidden">
+          <button onclick="toggleSpeechRecognition()" id="mic-btn" class="flex items-center gap-2 bg-red-500/20 text-red-400 border border-red-500/40 px-4 py-1.5 rounded-full text-xs font-medium mic-listening hover:scale-105 transition-transform">
+            <iconify-icon icon="lucide:mic" class="text-sm animate-pulse"></iconify-icon>
+            <span id="mic-status-label">Listening... Speak now</span>
+          </button>
+        </div>
+
         <!-- ============================================== -->
-        <!-- STEP 1: NAME INPUT -->
+        <!-- STEP 1: NAME INPUT (VOICE + TEXT) -->
         <!-- ============================================== -->
-        <div id="step-name" class="w-full space-y-4">
-          <input type="text" id="user-name-input" placeholder="Enter your name" autofocus
-                 class="w-full liquid-glass rounded-xl px-4 py-3 text-sm sm:text-base text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 border border-white/15">
+        <div id="step-name" class="w-full space-y-3">
+          <div class="relative">
+            <input type="text" id="user-name-input" placeholder="Say or type your name" autofocus
+                   class="w-full liquid-glass rounded-xl pl-4 pr-11 py-3 text-sm sm:text-base text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 border border-white/15">
+            <button onclick="startVoiceInputForStep('name')" class="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 text-white/70 hover:text-cyan-300 transition" title="Speak name">
+              <iconify-icon icon="lucide:mic" class="text-lg"></iconify-icon>
+            </button>
+          </div>
           <button onclick="handleNameSubmit()" class="w-full bg-white text-black font-semibold rounded-xl py-3 text-sm hover:scale-[1.02] active:scale-[0.98] transition-transform shadow-lg">
             Continue
           </button>
         </div>
 
         <!-- ============================================== -->
-        <!-- STEP 2: QUESTION INPUT -->
+        <!-- STEP 2: QUESTION INPUT (VOICE + TEXT) -->
         <!-- ============================================== -->
-        <div id="step-question" class="w-full space-y-4 hidden">
-          <textarea id="user-question-input" rows="3" placeholder="What would you like to know about your future, or is there any problem you are facing?"
-                    class="w-full liquid-glass rounded-xl px-4 py-3 text-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 border border-white/15 resize-none"></textarea>
+        <div id="step-question" class="w-full space-y-3 hidden">
+          <div class="relative">
+            <textarea id="user-question-input" rows="3" placeholder="What would you like to know about your future, or what problem are you facing?"
+                      class="w-full liquid-glass rounded-xl pl-4 pr-11 py-3 text-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 border border-white/15 resize-none"></textarea>
+            <button onclick="startVoiceInputForStep('question')" class="absolute right-2.5 top-3 p-1.5 text-white/70 hover:text-cyan-300 transition" title="Speak question">
+              <iconify-icon icon="lucide:mic" class="text-lg"></iconify-icon>
+            </button>
+          </div>
           <button onclick="handleQuestionSubmit()" class="w-full bg-white text-black font-semibold rounded-xl py-3 text-sm hover:scale-[1.02] active:scale-[0.98] transition-transform shadow-lg">
             Continue
           </button>
         </div>
 
         <!-- ============================================== -->
-        <!-- STEP 3: BIRTH DETAILS CHOICE (YES / NO) -->
+        <!-- STEP 3: BIRTH DETAILS CHOICE (VOICE + TAP) -->
         <!-- ============================================== -->
         <div id="step-choice" class="w-full space-y-3 hidden">
           <button onclick="handleBirthChoice(true)" class="w-full liquid-glass hover:bg-white/15 border border-white/20 rounded-2xl p-4 text-left flex items-center justify-between group transition">
             <div>
               <div class="text-sm font-semibold text-white group-hover:text-cyan-300 transition-colors">Yes, I know my exact birth time & details</div>
-              <div class="text-xs text-white/60 mt-0.5">I have my exact birth date, time, and city</div>
+              <div class="text-xs text-white/60 mt-0.5">Say "Yes" or tap here</div>
             </div>
             <iconify-icon icon="lucide:chevron-right" class="text-lg text-white/60 group-hover:translate-x-1 transition-transform"></iconify-icon>
           </button>
@@ -316,7 +343,7 @@
           <button onclick="handleBirthChoice(false)" class="w-full liquid-glass hover:bg-white/15 border border-white/20 rounded-2xl p-4 text-left flex items-center justify-between group transition">
             <div>
               <div class="text-sm font-semibold text-white group-hover:text-amber-300 transition-colors">No, I don't know my exact birth time</div>
-              <div class="text-xs text-white/60 mt-0.5">Use 1 to 249 Horary KP System with current time & place</div>
+              <div class="text-xs text-white/60 mt-0.5">Say "No" to use the 1 to 249 Horary KP System</div>
             </div>
             <iconify-icon icon="lucide:chevron-right" class="text-lg text-white/60 group-hover:translate-x-1 transition-transform"></iconify-icon>
           </button>
@@ -347,12 +374,17 @@
         </div>
 
         <!-- ============================================== -->
-        <!-- STEP 4B: 1 TO 249 HORARY SYSTEM (CURRENT TIME & PLACE) -->
+        <!-- STEP 4B: 1 TO 249 HORARY SYSTEM (VOICE OR NUMBER) -->
         <!-- ============================================== -->
         <div id="step-horary-form" class="w-full space-y-3.5 hidden text-left">
           <div>
             <label class="text-xs text-white/70 font-medium mb-1 block">Pick a sacred number in your mind (1 to 249)</label>
-            <input type="number" id="horary-number-input" min="1" max="249" placeholder="e.g. 108" class="w-full liquid-glass rounded-xl px-4 py-3 text-lg font-bold text-center text-amber-300 placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-amber-400/50 border border-white/15">
+            <div class="relative">
+              <input type="number" id="horary-number-input" min="1" max="249" placeholder="Say or enter 1-249" class="w-full liquid-glass rounded-xl px-4 py-3 text-lg font-bold text-center text-amber-300 placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-amber-400/50 border border-white/15">
+              <button onclick="startVoiceInputForStep('horary')" class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-white/70 hover:text-amber-300 transition" title="Speak number">
+                <iconify-icon icon="lucide:mic" class="text-lg"></iconify-icon>
+              </button>
+            </div>
           </div>
 
           <!-- Current Time & Date Display automatically captured -->
@@ -504,7 +536,6 @@
     let isUserInteracting = false;
     let userInteractionTimeout = null;
 
-    // Authentic Astronomical Celestial Configs with Deep Fiery Orange Sun
     const PLANET_CONFIGS = [
       { name: 'sun', label: 'Sun', size: 3.2, orbitRadius: 0, orbitSpeed: 0, color: 0xff6600, emissive: 0xff4400, texture: 'sun_2k.jpg' },
       { name: 'mercury', label: 'Mercury', size: 0.7, orbitRadius: 6.8, orbitSpeed: 0.024, color: 0x9ca3af, texture: 'mercury_2k.jpg' },
@@ -578,7 +609,6 @@
       const ambientLight = new THREE.AmbientLight(0x282838, 0.9);
       scene.add(ambientLight);
 
-      // Radiant Orange-Gold Solar Light at the Sun's core
       const sunPointLight = new THREE.PointLight(0xff8c00, 4.2, 700, 0.4);
       sunPointLight.position.set(0, 0, 0);
       scene.add(sunPointLight);
@@ -592,11 +622,9 @@
       textureLoader.setCrossOrigin('anonymous');
 
       PLANET_CONFIGS.forEach((config) => {
-        // Orbital Pivot Group
         const orbitGroup = new THREE.Group();
         scene.add(orbitGroup);
 
-        // Glowing Orbital Path Ring
         if (config.orbitRadius > 0) {
           const ringGeo = new THREE.RingGeometry(config.orbitRadius - 0.06, config.orbitRadius + 0.06, 128);
           const ringMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.1, side: THREE.DoubleSide });
@@ -605,15 +633,11 @@
           scene.add(ringMesh);
         }
 
-        // Procedural Base Texture
         const proceduralTex = generatePlanetTexture(config.name, config.color);
-
-        // Planet Sphere Geometry & Material
         const geo = new THREE.SphereGeometry(config.size, 64, 64);
         let mat;
 
         if (config.name === 'sun') {
-          // Fiery Radiant Orange Sun Material
           mat = new THREE.MeshStandardMaterial({
             map: proceduralTex,
             emissive: 0xff4400,
@@ -622,7 +646,6 @@
             metalness: 0.0
           });
 
-          // Sun Blazing Orange Corona Flare Halo
           const coronaGeo = new THREE.SphereGeometry(config.size * 1.25, 32, 32);
           const coronaMat = new THREE.ShaderMaterial({
             vertexShader: `
@@ -663,7 +686,6 @@
           mesh.add(sunCoronaMesh);
         }
 
-        // Saturn Ring with golden-ice shading
         if (config.hasRing) {
           const sRingGeo = new THREE.RingGeometry(config.size * 1.35, config.size * 2.35, 64);
           const sRingMat = new THREE.MeshBasicMaterial({ color: 0xecd5a4, side: THREE.DoubleSide, transparent: true, opacity: 0.9 });
@@ -672,7 +694,6 @@
           mesh.add(sRing);
         }
 
-        // Asynchronously load genuine 2K Texture pack
         textureLoader.load(
           `./assets/${config.texture}`,
           (tex) => {
@@ -694,17 +715,14 @@
         });
       });
 
-      // 4. INTERACTIVE POINTER LISTENERS
       setupSpaceInteractions(canvas);
 
-      // 5. RENDER & ORBITAL ANIMATION LOOP
       function animate() {
         requestAnimationFrame(animate);
 
-        // Animate Orbits & Rotations
         celestialBodies.forEach(body => {
           if (focusedBody === body) {
-            // Selected planet is STATIONARY in orbit for inspection
+            // Selected planet is stationary
           } else {
             body.mesh.rotation.y += 0.008;
 
@@ -717,7 +735,6 @@
           }
         });
 
-        // Camera Smooth Lerp to Focused Planet (Framed to fit mobile screens completely without cutting)
         if (focusedBody) {
           const worldPos = new THREE.Vector3();
           focusedBody.mesh.getWorldPosition(worldPos);
@@ -768,7 +785,6 @@
       focusedBody = found;
       isOrbitOverview = false;
 
-      // Update UI Header Badge
       activePlanetName.textContent = found.config.label;
       activePlanetDot.style.backgroundColor = '#' + found.config.color.toString(16).padStart(6, '0');
 
@@ -979,9 +995,10 @@
     }
 
     // =========================================================================
-    // ETHEREAL AI VOICE & CONVERSATIONAL ASTROLOGY LOGIC
+    // UNIVERSE ASSISTANT: ALEXA-STYLE VOICE & SPEECH RECOGNITION PIPELINE
     // =========================================================================
     let voiceAudioEnabled = true;
+    let currentActiveStep = 'name';
     let consultationState = {
       name: '',
       question: '',
@@ -999,7 +1016,10 @@
     const etherealModal = document.getElementById('ethereal-modal');
     const assistantText = document.getElementById('assistant-text');
     const avatarGlowRing = document.getElementById('avatar-glow-ring');
-    const speechWave = document.getElementById('speech-wave');
+    const statusWaveBadge = document.getElementById('status-wave-badge');
+    const statusBadgeText = document.getElementById('status-badge-text');
+    const voiceListenIndicator = document.getElementById('voice-listen-indicator');
+    const micStatusLabel = document.getElementById('mic-status-label');
     const voiceIcon = document.getElementById('voice-icon');
 
     const stepName = document.getElementById('step-name');
@@ -1008,6 +1028,142 @@
     const stepBirthForm = document.getElementById('step-birth-form');
     const stepHoraryForm = document.getElementById('step-horary-form');
     const stepSuccess = document.getElementById('step-success');
+
+    // Speech-to-Text Recognition Setup
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition = null;
+    let isListening = false;
+
+    if (SpeechRecognition) {
+      recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => {
+        isListening = true;
+        voiceListenIndicator.classList.remove('hidden');
+        micStatusLabel.textContent = "Listening... Speak now";
+        statusWaveBadge.classList.remove('hidden');
+        statusBadgeText.textContent = "Listening";
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map(r => r[0].transcript)
+          .join('').trim();
+        
+        const isFinal = event.results[0].isFinal;
+        handleRecognizedSpeech(transcript, isFinal);
+      };
+
+      recognition.onerror = (event) => {
+        console.log('Speech recognition error:', event.error);
+        stopListeningUI();
+      };
+
+      recognition.onend = () => {
+        isListening = false;
+        stopListeningUI();
+      };
+    }
+
+    function toggleSpeechRecognition() {
+      if (!recognition) {
+        alert("Speech recognition is not supported in this browser. You can type directly in the box.");
+        return;
+      }
+      if (isListening) {
+        recognition.stop();
+      } else {
+        startListening();
+      }
+    }
+
+    function startListening() {
+      if (!recognition) return;
+      try {
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+        }
+        recognition.start();
+      } catch (err) {
+        console.log('Recognition already started');
+      }
+    }
+
+    function stopListeningUI() {
+      isListening = false;
+      voiceListenIndicator.classList.add('hidden');
+      if (!window.speechSynthesis.speaking) {
+        statusWaveBadge.classList.add('hidden');
+        avatarGlowRing.classList.remove('avatar-speaking');
+        avatarGlowRing.classList.add('avatar-float');
+      }
+    }
+
+    function startVoiceInputForStep(step) {
+      currentActiveStep = step;
+      startListening();
+    }
+
+    // Smart Conversational Speech Processing
+    function handleRecognizedSpeech(transcript, isFinal) {
+      if (!transcript) return;
+
+      if (currentActiveStep === 'name') {
+        const cleanName = transcript.replace(/^(my name is|i am|this is|it's|it is)\s+/i, '').replace(/[.!?,]/g, '');
+        document.getElementById('user-name-input').value = cleanName;
+        if (isFinal && cleanName.length > 1) {
+          setTimeout(() => handleNameSubmit(), 600);
+        }
+      } else if (currentActiveStep === 'question') {
+        document.getElementById('user-question-input').value = transcript;
+        if (isFinal && transcript.length > 3) {
+          setTimeout(() => handleQuestionSubmit(), 800);
+        }
+      } else if (currentActiveStep === 'choice') {
+        const lower = transcript.toLowerCase();
+        if (lower.includes('yes') || lower.includes('know') || lower.includes('have') || lower.includes('accurate') || lower.includes('birth details')) {
+          handleBirthChoice(true);
+        } else if (lower.includes('no') || lower.includes('don\'t') || lower.includes('dont') || lower.includes('not') || lower.includes('horary')) {
+          handleBirthChoice(false);
+        }
+      } else if (currentActiveStep === 'horary') {
+        // Extract spoken number e.g. "108", "twenty five"
+        const num = parseInt(transcript.replace(/\D/g, ''), 10);
+        if (!isNaN(num) && num >= 1 && num <= 249) {
+          document.getElementById('horary-number-input').value = num;
+          if (isFinal) {
+            setTimeout(() => handleSaveHoraryData(), 600);
+          }
+        }
+      }
+    }
+
+    // Alexa-Style Natural Female Voice Synthesis
+    function getAlexaVoice() {
+      const voices = window.speechSynthesis.getVoices();
+      
+      const preferred = [
+        'Microsoft Jenny Online (Natural)',
+        'Microsoft Aria Online (Natural)',
+        'Google US English',
+        'Google UK English Female',
+        'Samantha',
+        'Victoria',
+        'Karen',
+        'Zira'
+      ];
+
+      for (const name of preferred) {
+        const v = voices.find(voice => voice.name.includes(name));
+        if (v) return v;
+      }
+
+      return voices.find(v => v.lang.startsWith('en') && (v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('natural') || v.name.toLowerCase().includes('woman'))) 
+          || voices.find(v => v.lang.startsWith('en'));
+    }
 
     function toggleVoiceAudio() {
       voiceAudioEnabled = !voiceAudioEnabled;
@@ -1022,27 +1178,37 @@
       }
     }
 
-    function speakText(text) {
-      if (!voiceAudioEnabled) return;
+    function speakText(text, autoListenAfter = true) {
+      if (!voiceAudioEnabled) {
+        if (autoListenAfter && recognition) {
+          setTimeout(startListening, 400);
+        }
+        return;
+      }
+
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
         
-        // Find best soft female voice
-        const voices = window.speechSynthesis.getVoices();
-        const femaleVoice = voices.find(v => (v.name.includes('Female') || v.name.includes('Zira') || v.name.includes('Samantha') || v.name.includes('Google UK English Female') || v.name.includes('Karen') || v.lang.includes('en')));
-        if (femaleVoice) {
-          utterance.voice = femaleVoice;
+        const alexaVoice = getAlexaVoice();
+        if (alexaVoice) {
+          utterance.voice = alexaVoice;
         }
-        utterance.pitch = 1.15; // Soft, gentle female pitch
-        utterance.rate = 0.95;  // Calm, relaxed cadence
+
+        utterance.pitch = 1.05; // Warm, natural cadence
+        utterance.rate = 0.98;  // Clear Alexa-style speech pace
 
         utterance.onstart = () => {
           startSpeakingAnimation();
         };
+
         utterance.onend = () => {
           stopSpeakingAnimation();
+          if (autoListenAfter && recognition && currentActiveStep !== 'success') {
+            setTimeout(startListening, 300);
+          }
         };
+
         utterance.onerror = () => {
           stopSpeakingAnimation();
         };
@@ -1054,13 +1220,14 @@
     function startSpeakingAnimation() {
       avatarGlowRing.classList.remove('avatar-float');
       avatarGlowRing.classList.add('avatar-speaking');
-      speechWave.classList.remove('hidden');
+      statusWaveBadge.classList.remove('hidden');
+      statusBadgeText.textContent = "Speaking";
     }
 
     function stopSpeakingAnimation() {
       avatarGlowRing.classList.remove('avatar-speaking');
       avatarGlowRing.classList.add('avatar-float');
-      speechWave.classList.add('hidden');
+      statusWaveBadge.classList.add('hidden');
     }
 
     function openEtherealConsultation() {
@@ -1070,18 +1237,21 @@
         etherealModal.classList.remove('opacity-0');
       }, 50);
 
-      // Reset to Step 1: Greeting & Name
+      currentActiveStep = 'name';
       showStep('name');
-      const greeting = "Welcome to Universe. What is your name?";
+      const greeting = "Hello, welcome to Universe. What is your name?";
       assistantText.textContent = greeting;
       setTimeout(() => {
-        speakText(greeting);
+        speakText(greeting, true);
       }, 400);
     }
 
     function closeEtherealConsultation() {
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
+      }
+      if (recognition && isListening) {
+        recognition.stop();
       }
       stopSpeakingAnimation();
       etherealModal.classList.add('opacity-0');
@@ -1092,6 +1262,7 @@
     }
 
     function showStep(step) {
+      currentActiveStep = step;
       stepName.classList.add('hidden');
       stepQuestion.classList.add('hidden');
       stepChoice.classList.add('hidden');
@@ -1111,7 +1282,7 @@
     function handleNameSubmit() {
       const name = document.getElementById('user-name-input').value.trim();
       if (!name) {
-        speakText("Please share your name with me.");
+        speakText("Please say or type your name.");
         return;
       }
       consultationState.name = name;
@@ -1119,22 +1290,22 @@
 
       const questionPrompt = `Nice to meet you, ${name}. What would you like to know about your future, or is there any problem or question you are facing?`;
       assistantText.textContent = questionPrompt;
-      speakText(questionPrompt);
+      speakText(questionPrompt, true);
     }
 
     // Step 2 -> Step 3
     function handleQuestionSubmit() {
       const question = document.getElementById('user-question-input').value.trim();
       if (!question) {
-        speakText("Please share your question or the topic you want guidance on.");
+        speakText("Please say or write your question.");
         return;
       }
       consultationState.question = question;
       showStep('choice');
 
-      const choicePrompt = `Thank you. Do you have your accurate birth details — including your date, exact time, and place of birth?`;
+      const choicePrompt = `Thank you. Do you have your accurate birth details — including your date, time, and place of birth?`;
       assistantText.textContent = choicePrompt;
-      speakText(choicePrompt);
+      speakText(choicePrompt, true);
     }
 
     // Step 3 -> Step 4A or 4B
@@ -1143,13 +1314,12 @@
 
       if (hasDetails) {
         showStep('birth');
-        const prompt = "Please provide your birth date, exact time of birth, and place of birth. Make sure your birth time is accurate.";
+        const prompt = "Please provide your birth date, accurate time of birth, and place of birth.";
         assistantText.textContent = prompt;
-        speakText(prompt);
+        speakText(prompt, false);
       } else {
         showStep('horary');
         
-        // Auto-detect current time, date, and timezone location
         const now = new Date();
         const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
         const dateStr = now.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
@@ -1163,9 +1333,9 @@
         consultationState.currentDate = dateStr;
         consultationState.currentLocation = timeZone;
 
-        const prompt = "Let's use a new era of astrology: the 1 to 249 system. Focus your mind on your question, pick a number between 1 and 249, and your current time and location will be aligned.";
+        const prompt = "Let's use a new era of astrology: the 1 to 249 system. Focus your mind on your question, pick a sacred number between 1 and 249, and your current time and location will be aligned.";
         assistantText.textContent = prompt;
-        speakText(prompt);
+        speakText(prompt, true);
       }
     }
 
@@ -1176,7 +1346,7 @@
       const pob = document.getElementById('pob-input').value.trim();
 
       if (!dob || !tob || !pob) {
-        speakText("Please fill in your birth date, time, and place of birth.");
+        speakText("Please fill in your birth date, time, and place of birth.", false);
         return;
       }
 
@@ -1192,7 +1362,7 @@
     function handleSaveHoraryData() {
       const numVal = parseInt(document.getElementById('horary-number-input').value, 10);
       if (isNaN(numVal) || numVal < 1 || numVal > 249) {
-        speakText("Please pick a valid number between 1 and 249.");
+        speakText("Please pick a number between 1 and 249.", true);
         return;
       }
 
@@ -1203,7 +1373,6 @@
     }
 
     function saveAndConfirmData(mode) {
-      // Save to localStorage
       try {
         localStorage.setItem('universe_consultation_data', JSON.stringify(consultationState));
         console.log('Saved Consultation Data:', consultationState);
@@ -1213,7 +1382,6 @@
 
       showStep('success');
 
-      // Populate Summary Card
       const summaryCard = document.getElementById('stored-summary-card');
       if (mode === 'natal') {
         summaryCard.innerHTML = `
@@ -1236,9 +1404,9 @@
         `;
       }
 
-      const successPrompt = `Thank you, ${consultationState.name}. Your details and question have been securely recorded. Ready for chart generation in the next step.`;
+      const successPrompt = `Thank you, ${consultationState.name}. Your details and question have been securely recorded into the database.`;
       assistantText.textContent = successPrompt;
-      speakText(successPrompt);
+      speakText(successPrompt, false);
     }
   </script>
 </body>
