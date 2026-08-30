@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Universe — See the shape of the noise</title>
-  <meta name="description" content="Explore the solar system in real-time 3D orbit with photorealistic 2K NASA textures.">
+  <meta name="description" content="Explore the solar system in real-time 3D orbit with photorealistic textures.">
   
   <!-- Tailwind CSS, Three.js, & Iconify -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -112,7 +112,7 @@
     <video id="hero-video" class="absolute inset-0 w-full h-full object-cover object-bottom pointer-events-none z-0"
            muted autoplay loop playsinline preload="auto"></video>
 
-    <!-- 2. Interactive 3D Solar System & 2K Planet Canvas -->
+    <!-- 2. Interactive 3D Solar System & Realistic Planet Canvas -->
     <canvas id="space-canvas" class="absolute inset-0 w-full h-full z-10 pointer-events-none opacity-0 transition-opacity duration-1000"></canvas>
 
     <!-- Top Navbar -->
@@ -129,9 +129,9 @@
           <span class="font-semibold text-base md:text-lg tracking-tight">Universe</span>
         </div>
 
-        <!-- Center Active Planet Badge (Shown in Space Mode) -->
+        <!-- Center Active Planet Badge (Clean: No 2K or 9 planet mentions) -->
         <div id="active-planet-badge" class="hidden items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs sm:text-sm font-medium text-white shadow-lg">
-          <span id="active-planet-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+          <span id="active-planet-dot" class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
           <span id="active-planet-name">Solar System</span>
         </div>
 
@@ -160,7 +160,7 @@
       
       <p class="text-white/80 text-xs sm:text-sm md:text-base leading-relaxed max-w-xl md:whitespace-nowrap mb-8 md:mb-10 px-3"
          style="text-shadow: 0 0 28px rgba(0, 0, 0, 0.7), 0 1px 10px rgba(0, 0, 0, 0.5);">
-        Gaze upward to travel through the solar system and observe the planets in photorealistic 2K detail.
+        Gaze upward to travel through the solar system and observe the planets in photorealistic detail.
       </p>
 
       <!-- Action Button Pill -->
@@ -178,11 +178,11 @@
       </div>
     </main>
 
-    <!-- Bottom Instruction Hint (Clean, minimalist, no buttons) -->
+    <!-- Bottom Instruction / Current Time Bar (Visible in Space Mode) -->
     <div id="space-tap-hint" class="relative z-30 px-4 pb-4 pt-1 text-center hidden opacity-0 transition-opacity duration-700">
-      <div class="inline-flex items-center gap-2 text-xs text-white/70 px-4 py-1.5 rounded-full liquid-glass">
-        <iconify-icon icon="lucide:pointer" class="text-sm text-white animate-pulse"></iconify-icon>
-        <span id="hint-text">Tap any planet in space to inspect in 2K</span>
+      <div class="inline-flex items-center gap-2 text-xs sm:text-sm text-white/80 px-5 py-2 rounded-full liquid-glass shadow-lg">
+        <iconify-icon icon="lucide:clock" class="text-sm text-amber-400"></iconify-icon>
+        <span id="current-time-display" class="font-medium tracking-wide">See your current time: --:--:--</span>
       </div>
     </div>
 
@@ -205,8 +205,20 @@
     const activePlanetName = document.getElementById('active-planet-name');
     const orbitViewBtn = document.getElementById('orbit-view-btn');
     const spaceTapHint = document.getElementById('space-tap-hint');
-    const hintText = document.getElementById('hint-text');
+    const currentTimeDisplay = document.getElementById('current-time-display');
     const heroSpacer = document.getElementById('hero-spacer');
+
+    // Live Clock Updater
+    function updateLiveTime() {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+      const dateStr = now.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+      if (currentTimeDisplay) {
+        currentTimeDisplay.textContent = `See your current time: ${timeStr} • ${dateStr}`;
+      }
+    }
+    setInterval(updateLiveTime, 1000);
+    updateLiveTime();
 
     function toggleUniverseMode() {
       if (inSpaceMode) {
@@ -282,7 +294,7 @@
     }
 
     // ==========================================
-    // THREE.JS SOLAR SYSTEM & PHOTOREALISTIC 2K PLANETS
+    // THREE.JS SOLAR SYSTEM & PHOTOREALISTIC PLANETS
     // ==========================================
     let threeInitialized = false;
     let scene, camera, renderer, raycaster, mouse;
@@ -303,17 +315,17 @@
     let isUserInteracting = false;
     let userInteractionTimeout = null;
 
-    // Authentic Astronomical & Vedic Celestial Configs
+    // Authentic Astronomical Celestial Configs with Deep Fiery Orange Sun
     const PLANET_CONFIGS = [
-      { name: 'sun', label: 'Sun', size: 3.2, orbitRadius: 0, orbitSpeed: 0, color: 0xffb703, emissive: 0xff8c00, texture: 'sun_2k.jpg' },
+      { name: 'sun', label: 'Sun', size: 3.2, orbitRadius: 0, orbitSpeed: 0, color: 0xff6600, emissive: 0xff4400, texture: 'sun_2k.jpg' },
       { name: 'mercury', label: 'Mercury', size: 0.7, orbitRadius: 6.8, orbitSpeed: 0.024, color: 0x9ca3af, texture: 'mercury_2k.jpg' },
-      { name: 'venus', label: 'Venus', size: 1.1, orbitRadius: 10.5, orbitSpeed: 0.018, color: 0xfde047, texture: 'venus_2k.jpg' },
-      { name: 'earth', label: 'Earth', size: 1.25, orbitRadius: 15.0, orbitSpeed: 0.014, color: 0x3b82f6, texture: 'earth_2k.jpg' },
-      { name: 'moon', label: 'Moon', size: 0.65, orbitRadius: 18.2, orbitSpeed: 0.013, color: 0xe5e7eb, texture: 'moon_2k.jpg' },
-      { name: 'mars', label: 'Mars', size: 0.85, orbitRadius: 22.0, orbitSpeed: 0.010, color: 0xef4444, texture: 'mars_2k.jpg' },
-      { name: 'jupiter', label: 'Jupiter', size: 2.2, orbitRadius: 28.0, orbitSpeed: 0.007, color: 0xd97706, texture: 'jupiter_2k.jpg' },
-      { name: 'saturn', label: 'Saturn', size: 1.9, orbitRadius: 35.0, orbitSpeed: 0.005, color: 0xfacc15, hasRing: true, texture: 'saturn_2k.jpg' },
-      { name: 'uranus', label: 'Uranus', size: 1.4, orbitRadius: 41.5, orbitSpeed: 0.0035, color: 0x38bdf8, texture: 'uranus_2k.jpg' }
+      { name: 'venus', label: 'Venus', size: 1.1, orbitRadius: 10.5, orbitSpeed: 0.018, color: 0xf59e0b, texture: 'venus_2k.jpg' },
+      { name: 'earth', label: 'Earth', size: 1.25, orbitRadius: 15.0, orbitSpeed: 0.014, color: 0x2563eb, texture: 'earth_2k.jpg' },
+      { name: 'moon', label: 'Moon', size: 0.65, orbitRadius: 18.2, orbitSpeed: 0.013, color: 0xd1d5db, texture: 'moon_2k.jpg' },
+      { name: 'mars', label: 'Mars', size: 0.85, orbitRadius: 22.0, orbitSpeed: 0.010, color: 0xdc2626, texture: 'mars_2k.jpg' },
+      { name: 'jupiter', label: 'Jupiter', size: 2.2, orbitRadius: 28.0, orbitSpeed: 0.007, color: 0xb45309, texture: 'jupiter_2k.jpg' },
+      { name: 'saturn', label: 'Saturn', size: 1.9, orbitRadius: 35.0, orbitSpeed: 0.005, color: 0xeab308, hasRing: true, texture: 'saturn_2k.jpg' },
+      { name: 'uranus', label: 'Uranus', size: 1.4, orbitRadius: 41.5, orbitSpeed: 0.0035, color: 0x06b6d4, texture: 'uranus_2k.jpg' }
     ];
 
     function initThreeSpace() {
@@ -323,7 +335,7 @@
       const height = window.innerHeight;
 
       scene = new THREE.Scene();
-      camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 2000);
+      camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 3000);
       camera.position.set(0, 36, 44);
 
       renderer = new THREE.WebGLRenderer({
@@ -335,21 +347,26 @@
       renderer.setSize(width, height);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.3;
+      renderer.toneMappingExposure = 1.35;
 
       raycaster = new THREE.Raycaster();
       mouse = new THREE.Vector2();
 
-      // 1. STARFIELD
+      // 1. STARFIELD (Fixed: Placed on distant celestial sphere r=750 so NO stars ever render on or in front of planets!)
       const starGeo = new THREE.BufferGeometry();
       const starCount = 3500;
       const starPositions = new Float32Array(starCount * 3);
       const starColors = new Float32Array(starCount * 3);
 
       for (let i = 0; i < starCount * 3; i += 3) {
-        starPositions[i] = (Math.random() - 0.5) * 1000;
-        starPositions[i + 1] = (Math.random() - 0.5) * 1000;
-        starPositions[i + 2] = (Math.random() - 0.5) * 1000;
+        // Spherical distribution at radius 750 to 950 (infinite deep space background)
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos((Math.random() * 2) - 1);
+        const r = 750 + Math.random() * 200;
+
+        starPositions[i] = r * Math.sin(phi) * Math.cos(theta);
+        starPositions[i + 1] = r * Math.sin(phi) * Math.sin(theta);
+        starPositions[i + 2] = r * Math.cos(phi);
 
         const c = Math.random();
         if (c > 0.85) { starColors[i] = 0.85; starColors[i+1] = 0.92; starColors[i+2] = 1.0; }
@@ -358,19 +375,27 @@
       }
       starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
       starGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
-      starField = new THREE.Points(starGeo, new THREE.PointsMaterial({ size: 1.3, vertexColors: true, transparent: true, opacity: 0.95 }));
+      
+      const starMat = new THREE.PointsMaterial({
+        size: 1.6,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.95,
+        depthWrite: false
+      });
+      starField = new THREE.Points(starGeo, starMat);
       scene.add(starField);
 
       // 2. CELESTIAL LIGHTING
       const ambientLight = new THREE.AmbientLight(0x282838, 0.9);
       scene.add(ambientLight);
 
-      // Radiant Point Light at the Sun's core
-      const sunPointLight = new THREE.PointLight(0xfffaed, 3.8, 600, 0.4);
+      // Radiant Orange-Gold Solar Light at the Sun's core
+      const sunPointLight = new THREE.PointLight(0xff8c00, 4.2, 700, 0.4);
       sunPointLight.position.set(0, 0, 0);
       scene.add(sunPointLight);
 
-      const fillLight = new THREE.DirectionalLight(0xffffff, 1.4);
+      const fillLight = new THREE.DirectionalLight(0xffffff, 1.5);
       fillLight.position.set(30, 25, 20);
       scene.add(fillLight);
 
@@ -400,17 +425,17 @@
         let mat;
 
         if (config.name === 'sun') {
-          // Radiant Sun Material with authentic solar brilliance
+          // Fiery Radiant Orange Sun Material
           mat = new THREE.MeshStandardMaterial({
             map: proceduralTex,
-            emissive: 0xff8c00,
-            emissiveIntensity: 1.2,
-            roughness: 0.2,
+            emissive: 0xff4400,
+            emissiveIntensity: 1.4,
+            roughness: 0.15,
             metalness: 0.0
           });
 
-          // Sun Glowing Corona Flare Aura
-          const coronaGeo = new THREE.SphereGeometry(config.size * 1.2, 32, 32);
+          // Sun Blazing Orange Corona Flare Halo
+          const coronaGeo = new THREE.SphereGeometry(config.size * 1.25, 32, 32);
           const coronaMat = new THREE.ShaderMaterial({
             vertexShader: `
               varying vec3 vNormal;
@@ -422,8 +447,8 @@
             fragmentShader: `
               varying vec3 vNormal;
               void main() {
-                float intensity = pow(0.7 - dot(vNormal, vec3(0, 0, 1.0)), 2.2);
-                gl_FragColor = vec4(1.0, 0.75, 0.2, 1.0) * intensity * 0.9;
+                float intensity = pow(0.72 - dot(vNormal, vec3(0, 0, 1.0)), 2.4);
+                gl_FragColor = vec4(1.0, 0.45, 0.05, 1.0) * intensity * 1.1;
               }
             `,
             blending: THREE.AdditiveBlending,
@@ -450,7 +475,7 @@
           mesh.add(sunCoronaMesh);
         }
 
-        // Saturn Ring with authentic golden-ice shading
+        // Saturn Ring with golden-ice shading
         if (config.hasRing) {
           const sRingGeo = new THREE.RingGeometry(config.size * 1.35, config.size * 2.35, 64);
           const sRingMat = new THREE.MeshBasicMaterial({ color: 0xecd5a4, side: THREE.DoubleSide, transparent: true, opacity: 0.9 });
@@ -506,7 +531,7 @@
           }
         });
 
-        // Camera Smooth Lerp to Focused Planet (Framed to fit mobile screens completely)
+        // Camera Smooth Lerp to Focused Planet (Framed to fit mobile screens completely without cutting)
         if (focusedBody) {
           const worldPos = new THREE.Vector3();
           focusedBody.mesh.getWorldPosition(worldPos);
@@ -518,12 +543,12 @@
           
           let camDistance;
           if (aspect < 1) {
-            // Mobile Portrait: Horizontal FOV is narrower, calculate distance based on horizontal width
+            // Mobile Portrait: Horizontal FOV is narrower, calculate distance based on horizontal width with safety margin
             const hFovRad = 2 * Math.atan(Math.tan(vFovRad / 2) * aspect);
-            camDistance = (radiusWithRings * 1.35) / Math.tan(hFovRad / 2);
+            camDistance = (radiusWithRings * 1.55) / Math.tan(hFovRad / 2);
           } else {
             // Landscape Desktop: Calculate based on vertical FOV
-            camDistance = (radiusWithRings * 1.3) / Math.tan(vFovRad / 2);
+            camDistance = (radiusWithRings * 1.4) / Math.tan(vFovRad / 2);
           }
 
           cameraTargetPos.set(worldPos.x, worldPos.y + (focusedBody.config.size * 0.15), worldPos.z + camDistance);
@@ -536,7 +561,7 @@
           // Wide angle view showing the solar system in orbit
           const aspect = window.innerWidth / window.innerHeight;
           const isMobile = aspect < 1 || window.innerWidth < 768;
-          cameraTargetPos.set(0, isMobile ? 56 : 38, isMobile ? 52 : 42);
+          cameraTargetPos.set(0, isMobile ? 58 : 38, isMobile ? 54 : 42);
           cameraLookAtPos.set(0, 0, 0);
         }
 
@@ -545,7 +570,7 @@
         camera.lookAt(currentLookAt);
 
         if (starField) {
-          starField.rotation.y += 0.0001;
+          starField.rotation.y += 0.00008;
         }
 
         renderer.render(scene, camera);
@@ -565,12 +590,11 @@
       focusedBody = found;
       isOrbitOverview = false;
 
-      // Update UI Header Badge
-      activePlanetName.textContent = `${found.config.label} • 2K`;
+      // Update UI Header Badge (Clean: No 2K text)
+      activePlanetName.textContent = found.config.label;
       activePlanetDot.style.backgroundColor = '#' + found.config.color.toString(16).padStart(6, '0');
       orbitViewBtn.classList.remove('hidden');
       orbitViewBtn.classList.add('flex');
-      hintText.textContent = `Drag with finger or mouse to rotate ${found.config.label}`;
 
       // Reset rotation controls
       focusedPlanetRotation = { x: 0, y: found.mesh.rotation.y };
@@ -580,14 +604,13 @@
       focusedBody = null;
       isOrbitOverview = true;
       activePlanetName.textContent = "Solar System";
-      activePlanetDot.style.backgroundColor = '#fbbf24';
+      activePlanetDot.style.backgroundColor = '#ff6600';
       orbitViewBtn.classList.remove('flex');
       orbitViewBtn.classList.add('hidden');
-      hintText.textContent = "Tap any planet in space to inspect in 2K";
     }
 
     // ==========================================
-    // AUTHENTIC CELESTIAL COLOR TEXTURES (2K)
+    // AUTHENTIC FIERY ORANGE SUN & PLANET TEXTURES
     // ==========================================
     function generatePlanetTexture(name, baseHex) {
       const canvas = document.createElement('canvas');
@@ -596,21 +619,29 @@
       const ctx = canvas.getContext('2d');
 
       if (name === 'sun') {
-        // Brilliant Radiant Sunburst (Bright Yellow-Gold)
+        // Deep Blazing Solar Orange Plasma Gradient
         const grad = ctx.createLinearGradient(0, 0, 0, 512);
-        grad.addColorStop(0, '#fffbeb');
-        grad.addColorStop(0.2, '#fde047');
-        grad.addColorStop(0.5, '#f59e0b');
-        grad.addColorStop(0.8, '#d97706');
-        grad.addColorStop(1, '#b45309');
+        grad.addColorStop(0, '#ff3300');
+        grad.addColorStop(0.25, '#ff6600');
+        grad.addColorStop(0.5, '#ff8800');
+        grad.addColorStop(0.75, '#ff4400');
+        grad.addColorStop(1, '#cc2200');
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, 1024, 512);
 
-        // Solar Granules & Flares
-        for (let i = 0; i < 500; i++) {
-          ctx.fillStyle = 'rgba(255, 255, 230, ' + (Math.random() * 0.45) + ')';
+        // Blazing Solar Granulation, Prominences & Sunspots
+        for (let i = 0; i < 600; i++) {
+          ctx.fillStyle = 'rgba(255, 200, 50, ' + (Math.random() * 0.45) + ')';
           ctx.beginPath();
-          ctx.arc(Math.random() * 1024, Math.random() * 512, Math.random() * 35 + 5, 0, Math.PI * 2);
+          ctx.arc(Math.random() * 1024, Math.random() * 512, Math.random() * 30 + 5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Sunspots
+        for (let i = 0; i < 15; i++) {
+          ctx.fillStyle = 'rgba(80, 15, 0, 0.7)';
+          ctx.beginPath();
+          ctx.arc(Math.random() * 1024, Math.random() * 512, Math.random() * 14 + 3, 0, Math.PI * 2);
           ctx.fill();
         }
       } else if (name === 'mercury') {
